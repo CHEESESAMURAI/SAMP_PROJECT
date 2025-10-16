@@ -298,7 +298,7 @@ async def generate_ai_recommendations(categories_data: List[Dict], analytics: di
         logger.info("🤖 Generating AI recommendations with OpenAI")
         
         # Устанавливаем правильный API ключ
-        openai.api_key = "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"
+        openai.api_key = "YOUR_OPENAI_API_KEY_HERE"
         
         response = await asyncio.get_event_loop().run_in_executor(
             None,

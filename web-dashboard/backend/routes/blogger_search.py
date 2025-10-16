@@ -876,7 +876,7 @@ async def generate_ai_recommendations(keyword: str, bloggers: List[BloggerDetail
     try:
         from openai import OpenAI
         
-        client = OpenAI(api_key="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")
+        client = OpenAI(api_key="YOUR_OPENAI_API_KEY_HERE")
         
         # Топ блогеры для анализа
         top_bloggers = sorted(bloggers, key=lambda x: x.stats.engagement_rate, reverse=True)[:5]
