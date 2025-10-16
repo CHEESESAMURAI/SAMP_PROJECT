@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📅 Seasonality Analysis Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #4a5568;
+            margin-bottom: 10px;
+        }
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 15px;
+            margin-bottom: 30px;
+            align-items: end;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .control-group label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #4a5568;
+        }
+        .control-group input, .control-group select {
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        .control-group input:focus, .control-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .test-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+        .test-button:hover {
+            transform: translateY(-2px);
+        }
+        .test-button:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .results {
+            margin-top: 30px;
+        }
+        .test-result {
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+        .success {
+            background: #f0fff4;
+            border-color: #48bb78;
+            color: #2d3748;
+        }
+        .error {
+            background: #fed7d7;
+            border-color: #f56565;
+            color: #2d3748;
+        }
+        .info {
+            background: #ebf8ff;
+            border-color: #4299e1;
+            color: #2d3748;
+        }
+        .data-preview {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .data-preview pre {
+            margin: 0;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        .quick-links {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .quick-link {
+            background: #4a5568;
+            color: white;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        .quick-link:hover {
+            background: #2d3748;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e9ecef;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📅 Тест анализа сезонности</h1>
+            <p>Проверка работы API эндпоинта и визуализации данных</p>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="category">📂 Категория:</label>
+                <input type="text" id="category" value="Для женщин/Одежда/Платья" placeholder="Путь категории">
+            </div>
+            
+            <div class="control-group">
+                <label for="period">⏰ Период:</label>
+                <select id="period">
+                    <option value="day">День</option>
+                    <option value="week">Неделя</option>
+                    <option value="month">Месяц</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="metric">📊 Метрика:</label>
+                <select id="metric">
+                    <option value="revenue">💰 Выручка</option>
+                    <option value="sales">📦 Продажи</option>
+                    <option value="pws">🎯 Ассортимент</option>
+                </select>
+            </div>
+            
+            <button class="test-button" onclick="testSeasonality()" id="testBtn">
+                🚀 Тест API
+            </button>
+        </div>
+
+        <div class="quick-links">
+            <a href="http://localhost:3000/seasonality-analysis" target="_blank" class="quick-link">
+                📱 Открыть фронтенд
+            </a>
+            <a href="http://localhost:8000/docs" target="_blank" class="quick-link">
+                📚 API документация
+            </a>
+            <a href="http://localhost:8000/seasonality" target="_blank" class="quick-link">
+                🔗 Прямой API
+            </a>
+        </div>
+
+        <div class="results" id="results"></div>
+    </div>
+
+    <script>
+        let testData = null;
+
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${type}`;
+            resultDiv.innerHTML = message;
+            results.appendChild(resultDiv);
+            resultDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function testSeasonality() {
+            const category = document.getElementById('category').value;
+            const period = document.getElementById('period').value;
+            const metric = document.getElementById('metric').value;
+            const testBtn = document.getElementById('testBtn');
+
+            if (!category.trim()) {
+                addResult('❌ Пожалуйста, укажите категорию', 'error');
+                return;
+            }
+
+            clearResults();
+            testBtn.disabled = true;
+            testBtn.textContent = '⏳ Тестируем...';
+
+            try {
+                addResult('🔍 Начинаем тест анализа сезонности...', 'info');
+                addResult(`📂 Категория: ${category}<br/>⏰ Период: ${period}<br/>📊 Метрика: ${metric}`, 'info');
+
+                // Test 1: Backend availability
+                addResult('1️⃣ Проверяем доступность бэкенда...', 'info');
+                const healthResponse = await fetch('http://localhost:8000/test/seasonality', { method: 'POST' });
+                
+                if (!healthResponse.ok) {
+                    throw new Error(`Backend недоступен: ${healthResponse.status}`);
+                }
+
+                const healthData = await healthResponse.json();
+                addResult(`✅ Бэкенд доступен: ${healthData.message}`, 'success');
+
+                // Test 2: Seasonality API
+                addResult('2️⃣ Тестируем API анализа сезонности...', 'info');
+                const apiResponse = await fetch('http://localhost:8000/seasonality', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        category_path: category,
+                        period: period
+                    })
+                });
+
+                if (!apiResponse.ok) {
+                    throw new Error(`API ошибка: ${apiResponse.status} - ${apiResponse.statusText}`);
+                }
+
+                testData = await apiResponse.json();
+
+                if (testData.error) {
+                    throw new Error(`Ошибка API: ${testData.error}`);
+                }
+
+                addResult('✅ API работает успешно!', 'success');
+
+                // Test 3: Data validation
+                addResult('3️⃣ Проверяем структуру данных...', 'info');
+                
+                if (!testData.annual_data || !Array.isArray(testData.annual_data)) {
+                    throw new Error('Отсутствуют данные годовой сезонности');
+                }
+
+                if (!testData.weekly_data || !Array.isArray(testData.weekly_data)) {
+                    throw new Error('Отсутствуют данные недельной сезонности');
+                }
+
+                addResult(`✅ Структура данных корректная:
+                    <br/>📅 Годовых точек: ${testData.annual_data.length}
+                    <br/>📊 Недельных точек: ${testData.weekly_data.length}`, 'success');
+
+                // Test 4: Data quality
+                addResult('4️⃣ Анализируем качество данных...', 'info');
+                
+                const annualSample = testData.annual_data[0];
+                const weeklySample = testData.weekly_data[0];
+
+                const requiredAnnualFields = ['noyeardate', 'season_revenue', 'holidays_revenue', 'season_sales', 'holidays_sales'];
+                const requiredWeeklyFields = ['day_of_week', 'day_name', 'weekly_revenue', 'weekly_sales'];
+
+                const missingAnnual = requiredAnnualFields.filter(field => !(field in annualSample));
+                const missingWeekly = requiredWeeklyFields.filter(field => !(field in weeklySample));
+
+                if (missingAnnual.length > 0) {
+                    throw new Error(`Отсутствуют поля в годовых данных: ${missingAnnual.join(', ')}`);
+                }
+
+                if (missingWeekly.length > 0) {
+                    throw new Error(`Отсутствуют поля в недельных данных: ${missingWeekly.join(', ')}`);
+                }
+
+                addResult('✅ Все обязательные поля присутствуют', 'success');
+
+                // Test 5: Statistics
+                displayStatistics();
+
+                // Test 6: Data preview
+                displayDataPreview();
+
+                addResult('🎉 Все тесты пройдены успешно! Анализ сезонности работает корректно.', 'success');
+
+            } catch (error) {
+                addResult(`❌ Ошибка теста: ${error.message}`, 'error');
+                console.error('Test error:', error);
+            } finally {
+                testBtn.disabled = false;
+                testBtn.textContent = '🚀 Тест API';
+            }
+        }
+
+        function displayStatistics() {
+            if (!testData) return;
+
+            const stats = calculateStats();
+            
+            const statsHTML = `
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.avgRevenue}%</div>
+                        <div class="stat-label">Средняя выручка</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.peakDay}</div>
+                        <div class="stat-label">Лучший день недели</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.holidays}</div>
+                        <div class="stat-label">Праздничных дней</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.seasonality}%</div>
+                        <div class="stat-label">Сезонность</div>
+                    </div>
+                </div>
+            `;
+
+            addResult('📊 Статистика анализа:' + statsHTML, 'success');
+        }
+
+        function calculateStats() {
+            const avgRevenue = Math.round(
+                testData.annual_data.reduce((sum, item) => sum + item.season_revenue, 0) / testData.annual_data.length
+            );
+
+            const peakWeekly = testData.weekly_data.reduce((max, item) => 
+                item.weekly_revenue > max.weekly_revenue ? item : max
+            );
+
+            const holidays = testData.annual_data.filter(item => item.holiday_name).length;
+
+            const maxRevenue = Math.max(...testData.annual_data.map(item => item.season_revenue));
+            const minRevenue = Math.min(...testData.annual_data.map(item => item.season_revenue));
+            const seasonality = Math.round(((maxRevenue - minRevenue) / minRevenue) * 100);
+
+            return {
+                avgRevenue,
+                peakDay: peakWeekly.day_name,
+                holidays,
+                seasonality
+            };
+        }
+
+        function displayDataPreview() {
+            const preview = {
+                category_path: testData.category_path,
+                period: testData.period,
+                annual_sample: testData.annual_data.slice(0, 3),
+                weekly_sample: testData.weekly_data.slice(0, 3),
+                total_records: {
+                    annual: testData.annual_data.length,
+                    weekly: testData.weekly_data.length
+                }
+            };
+
+            const previewHTML = `
+                <div class="data-preview">
+                    <strong>📋 Превью данных:</strong>
+                    <pre>${JSON.stringify(preview, null, 2)}</pre>
+                </div>
+            `;
+
+            addResult('📋 Образец полученных данных:' + previewHTML, 'info');
+        }
+
+        // Auto-run test on page load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                addResult('🚀 Автоматический запуск теста через 2 секунды...', 'info');
+                setTimeout(testSeasonality, 2000);
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

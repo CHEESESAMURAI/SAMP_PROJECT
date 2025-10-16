@@ -31894,3 +31894,8 @@ requests.exceptions.ConnectionError: HTTPSConnectionPool(host='card.wb.ru', port
 2025-06-04 19:43:36,715 - new_bot - INFO - Added result: www.instagram.com
 2025-06-04 19:43:36,716 - new_bot - INFO - Search completed successfully, found 20 results
 2025-06-04 19:43:36,716 - __main__ - INFO - Данные MPSTAT добавлены к анализу товара 240488019
+2025-07-20 10:27:59,544 - subscription_manager - INFO - Initializing SubscriptionManager with database: subscriptions.db
+2025-07-20 10:27:59,545 - subscription_manager - INFO - Initializing database tables
+2025-07-20 10:27:59,554 - subscription_manager - INFO - Database tables initialized successfully
+2025-07-20 10:27:59,566 - __main__ - INFO - Анализаторы успешно инициализированы
+2025-07-20 10:27:59,604 - __main__ - INFO - База данных успешно инициализирована

@@ -1,0 +1,805 @@
+/* Мобильная адаптация для Wild Analytics */
+
+/* Стили для десктопной версии (по умолчанию) */
+@media (min-width: 769px) {
+  /* Восстанавливаем нормальные размеры для десктопа */
+  .category-charts-grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)) !important;
+    gap: 20px !important;
+  }
+  
+  .category-chart-card {
+    padding: 30px !important;
+  }
+  
+  .category-chart-card canvas {
+    height: 300px !important;
+    max-height: none !important;
+  }
+  
+  /* Восстанавливаем нормальные размеры для всех графиков */
+  canvas {
+    height: auto !important;
+    max-height: none !important;
+  }
+  
+  /* Восстанавливаем нормальные размеры контейнеров */
+  div[style*="height: 300px"] {
+    height: 300px !important;
+    max-height: none !important;
+  }
+  
+  /* Восстанавливаем нормальные отступы */
+  div[style*="padding: 30px"] {
+    padding: 30px !important;
+  }
+  
+  div[style*="padding: 25px"] {
+    padding: 25px !important;
+  }
+  
+  /* Восстанавливаем нормальные размеры заголовков */
+  h2[style*="fontSize: 1.8rem"] {
+    font-size: 1.8rem !important;
+    margin-bottom: 25px !important;
+  }
+  
+  h3[style*="fontSize: 1.3rem"] {
+    font-size: 1.3rem !important;
+    margin-bottom: 20px !important;
+  }
+}
+
+/* Общие стили для мобильных устройств */
+@media (max-width: 768px) {
+  .card {
+    padding: 15px !important;
+    margin: 10px 0 !important;
+  }
+  
+  h1, h2, h3 {
+    font-size: 1.2rem !important;
+    margin-bottom: 10px !important;
+  }
+  
+  .btn {
+    padding: 8px 16px !important;
+    font-size: 0.9rem !important;
+  }
+  
+  input, textarea, select {
+    padding: 8px !important;
+    font-size: 0.9rem !important;
+  }
+  
+  .container, .mx-auto {
+    padding: 0 10px !important;
+  }
+  
+  .p-4, .p-6, .p-8 {
+    padding: 10px !important;
+  }
+  
+  .px-4, .px-6, .px-8 {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+  
+  .py-4, .py-6, .py-8 {
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+  }
+  
+  p, span, div {
+    font-size: 0.9rem !important;
+  }
+  
+  svg {
+    width: 1rem !important;
+    height: 1rem !important;
+  }
+}
+
+/* Специальные стили для BrandAnalysis */
+@media (max-width: 768px) {
+  .brand-top-products-grid {
+    grid-template-columns: 1fr !important;
+    gap: 15px !important;
+  }
+  
+  .brand-charts-grid {
+    grid-template-columns: 1fr !important;
+    gap: 15px !important;
+  }
+  
+  /* Уменьшаем размеры карточек товаров */
+  .brand-top-products-grid > div {
+    padding: 15px !important;
+  }
+  
+  /* Уменьшаем размеры изображений товаров */
+  .brand-top-products-grid img {
+    width: 60px !important;
+    height: 60px !important;
+  }
+  
+  /* Уменьшаем размеры текста в карточках товаров */
+  .brand-top-products-grid h4 {
+    font-size: 0.9rem !important;
+  }
+  
+  .brand-top-products-grid div[style*="fontSize: 0.9rem"] {
+    font-size: 0.8rem !important;
+  }
+  
+  .brand-top-products-grid div[style*="fontSize: 0.85rem"] {
+    font-size: 0.75rem !important;
+  }
+  
+  .brand-top-products-grid div[style*="fontSize: 0.8rem"] {
+    font-size: 0.7rem !important;
+  }
+  
+  /* ОПТИМАЛЬНЫЕ РАЗМЕРЫ ДЛЯ ГРАФИКОВ - не растягиваются на всю страницу */
+  .brand-charts-grid > div {
+    padding: 10px !important;
+    overflow: hidden !important;
+  }
+  
+  .brand-charts-grid canvas {
+    max-width: 100% !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+  
+  /* Оптимальные размеры для контейнеров с графиками */
+  div[style*="background: #f9fafb"] {
+    padding: 10px !important;
+    overflow: hidden !important;
+  }
+  
+  /* Оптимальные размеры для canvas */
+  canvas {
+    max-width: 100% !important;
+    width: 100% !important;
+    overflow-x: hidden !important;
+  }
+  
+  /* Оптимальные размеры для элементов с графиками */
+  div[style*="borderRadius: 15px"] {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+}
+
+/* СПЕЦИАЛЬНЫЕ СТИЛИ ДЛЯ СТРАНИЦЫ "АНАЛИЗ КАТЕГОРИЙ" */
+@media (max-width: 768px) {
+  /* Увеличиваем отступы между блоками на странице анализа категорий */
+  .category-charts-grid {
+    grid-template-columns: 1fr !important;
+    gap: 25px !important;
+  }
+  
+  .category-ai-grid {
+    grid-template-columns: 1fr !important;
+    gap: 25px !important;
+  }
+  
+  /* Увеличиваем отступы между основными блоками */
+  div[style*="display: flex"][style*="flexDirection: column"] {
+    gap: 35px !important;
+  }
+  
+  /* Увеличиваем отступы у карточек с информацией о категории */
+  div[style*="display: grid"][style*="gridTemplateColumns: repeat(auto-fit, minmax(250px, 1fr))"] {
+    gap: 20px !important;
+  }
+  
+  /* Увеличиваем отступы у карточек с дополнительными метриками */
+  div[style*="display: grid"][style*="gridTemplateColumns: repeat(auto-fit, minmax(200px, 1fr))"] {
+    gap: 20px !important;
+  }
+  
+  /* Увеличиваем отступы у карточек с ТОП-10 товарами */
+  div[style*="display: grid"][style*="gridTemplateColumns: repeat(auto-fit, minmax(220px, 1fr))"] {
+    gap: 20px !important;
+  }
+  
+  /* Увеличиваем отступы у всех основных блоков */
+  div[style*="background: white"][style*="borderRadius: 20px"] {
+    margin-bottom: 25px !important;
+  }
+  
+  /* Увеличиваем отступы у формы ввода */
+  div[style*="display: grid"][style*="gridTemplateColumns: repeat(auto-fit, minmax(200px, 1fr))"] {
+    gap: 20px !important;
+    margin-bottom: 30px !important;
+  }
+  
+  /* Увеличиваем отступы у быстрого выбора периода */
+  div[style*="display: flex"][style*="flexWrap: wrap"] {
+    gap: 15px !important;
+    margin-bottom: 30px !important;
+  }
+  
+  /* Увеличиваем отступы у кнопки анализа */
+  button[style*="width: 100%"] {
+    margin-top: 10px !important;
+  }
+  
+  /* Увеличиваем отступы у фильтров таблицы */
+  div[style*="display: grid"][style*="gridTemplateColumns: repeat(auto-fit, minmax(200px, 1fr))"][style*="marginBottom: 25px"] {
+    gap: 20px !important;
+    margin-bottom: 30px !important;
+  }
+  
+  /* Увеличиваем отступы у пагинации */
+  div[style*="display: flex"][style*="justifyContent: center"] {
+    margin-top: 30px !important;
+    gap: 20px !important;
+  }
+  
+  /* Увеличиваем отступы у расширенной информации о товаре */
+  div[style*="display: grid"][style*="gridTemplateColumns: repeat(auto-fit, minmax(250px, 1fr))"][style*="gap: 20px"] {
+    gap: 25px !important;
+  }
+  
+  /* Увеличиваем отступы у всех элементов с графиками */
+  div[style*="background: white"][style*="borderRadius: 20px"][style*="boxShadow: 0 10px 30px rgba(0,0,0,0.1)"] {
+    margin-bottom: 30px !important;
+  }
+  
+  /* Увеличиваем отступы у заголовков блоков */
+  h2[style*="fontSize: 1.8rem"] {
+    margin-bottom: 30px !important;
+  }
+  
+  /* Увеличиваем отступы у подзаголовков */
+  h3[style*="fontSize: 1.3rem"] {
+    margin-bottom: 25px !important;
+  }
+  
+  /* Увеличиваем отступы у всех карточек с метриками */
+  div[style*="background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)"] {
+    margin-bottom: 15px !important;
+  }
+  
+  /* Увеличиваем отступы у всех элементов с рекомендациями */
+  div[style*="background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%)"],
+  div[style*="background: linear-gradient(135deg, #dcfce7 0%, #f0fdf4 100%)"],
+  div[style*="background: linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%)"],
+  div[style*="background: linear-gradient(135deg, #fee2e2 0%, #fef2f2 100%)"],
+  div[style*="background: linear-gradient(135deg, #f3e8ff 0%, #faf5ff 100%)"],
+  div[style*="background: linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 100%)"] {
+    margin-bottom: 20px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Еще больше увеличиваем отступы на маленьких экранах */
+  .category-charts-grid {
+    gap: 20px !important;
+  }
+  
+  .category-ai-grid {
+    gap: 20px !important;
+  }
+  
+  /* Увеличиваем отступы между основными блоками */
+  div[style*="display: flex"][style*="flexDirection: column"] {
+    gap: 30px !important;
+  }
+  
+  /* Увеличиваем отступы у карточек с информацией о категории */
+  div[style*="display: grid"][style*="gridTemplateColumns: repeat(auto-fit, minmax(250px, 1fr))"] {
+    gap: 18px !important;
+  }
+  
+  /* Увеличиваем отступы у карточек с дополнительными метриками */
+  div[style*="display: grid"][style*="gridTemplateColumns: repeat(auto-fit, minmax(200px, 1fr))"] {
+    gap: 18px !important;
+  }
+  
+  /* Увеличиваем отступы у карточек с ТОП-10 товарами */
+  div[style*="display: grid"][style*="gridTemplateColumns: repeat(auto-fit, minmax(220px, 1fr))"] {
+    gap: 18px !important;
+  }
+  
+  /* Увеличиваем отступы у всех основных блоков */
+  div[style*="background: white"][style*="borderRadius: 20px"] {
+    margin-bottom: 22px !important;
+  }
+  
+  /* Увеличиваем отступы у формы ввода */
+  div[style*="display: grid"][style*="gridTemplateColumns: repeat(auto-fit, minmax(200px, 1fr))"] {
+    gap: 18px !important;
+    margin-bottom: 25px !important;
+  }
+  
+  /* Увеличиваем отступы у быстрого выбора периода */
+  div[style*="display: flex"][style*="flexWrap: wrap"] {
+    gap: 12px !important;
+    margin-bottom: 25px !important;
+  }
+  
+  /* Увеличиваем отступы у фильтров таблицы */
+  div[style*="display: grid"][style*="gridTemplateColumns: repeat(auto-fit, minmax(200px, 1fr))"][style*="marginBottom: 25px"] {
+    gap: 18px !important;
+    margin-bottom: 25px !important;
+  }
+  
+  /* Увеличиваем отступы у пагинации */
+  div[style*="display: flex"][style*="justifyContent: center"] {
+    margin-top: 25px !important;
+    gap: 18px !important;
+  }
+  
+  /* Увеличиваем отступы у расширенной информации о товаре */
+  div[style*="display: grid"][style*="gridTemplateColumns: repeat(auto-fit, minmax(250px, 1fr))"][style*="gap: 20px"] {
+    gap: 22px !important;
+  }
+  
+  /* Увеличиваем отступы у всех элементов с графиками */
+  div[style*="background: white"][style*="borderRadius: 20px"][style*="boxShadow: 0 10px 30px rgba(0,0,0,0.1)"] {
+    margin-bottom: 25px !important;
+  }
+  
+  /* Увеличиваем отступы у заголовков блоков */
+  h2[style*="fontSize: 1.8rem"] {
+    margin-bottom: 25px !important;
+  }
+  
+  /* Увеличиваем отступы у подзаголовков */
+  h3[style*="fontSize: 1.3rem"] {
+    margin-bottom: 22px !important;
+  }
+  
+  /* Увеличиваем отступы у всех карточек с метриками */
+  div[style*="background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)"] {
+    margin-bottom: 12px !important;
+  }
+  
+  /* Увеличиваем отступы у всех элементов с рекомендациями */
+  div[style*="background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%)"],
+  div[style*="background: linear-gradient(135deg, #dcfce7 0%, #f0fdf4 100%)"],
+  div[style*="background: linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%)"],
+  div[style*="background: linear-gradient(135deg, #fee2e2 0%, #fef2f2 100%)"],
+  div[style*="background: linear-gradient(135deg, #f3e8ff 0%, #faf5ff 100%)"],
+  div[style*="background: linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 100%)"] {
+    margin-bottom: 18px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  /* Минимальные отступы на очень маленьких экранах */
+  .category-charts-grid {
+    gap: 18px !important;
+  }
+  
+  .category-ai-grid {
+    gap: 18px !important;
+  }
+  
+  /* Увеличиваем отступы между основными блоками */
+  div[style*="display: flex"][style*="flexDirection: column"] {
+    gap: 25px !important;
+  }
+  
+  /* Увеличиваем отступы у карточек с информацией о категории */
+  div[style*="display: grid"][style*="gridTemplateColumns: repeat(auto-fit, minmax(250px, 1fr))"] {
+    gap: 15px !important;
+  }
+  
+  /* Увеличиваем отступы у карточек с дополнительными метриками */
+  div[style*="display: grid"][style*="gridTemplateColumns: repeat(auto-fit, minmax(200px, 1fr))"] {
+    gap: 15px !important;
+  }
+  
+  /* Увеличиваем отступы у карточек с ТОП-10 товарами */
+  div[style*="display: grid"][style*="gridTemplateColumns: repeat(auto-fit, minmax(220px, 1fr))"] {
+    gap: 15px !important;
+  }
+  
+  /* Увеличиваем отступы у всех основных блоков */
+  div[style*="background: white"][style*="borderRadius: 20px"] {
+    margin-bottom: 20px !important;
+  }
+  
+  /* Увеличиваем отступы у формы ввода */
+  div[style*="display: grid"][style*="gridTemplateColumns: repeat(auto-fit, minmax(200px, 1fr))"] {
+    gap: 15px !important;
+    margin-bottom: 22px !important;
+  }
+  
+  /* Увеличиваем отступы у быстрого выбора периода */
+  div[style*="display: flex"][style*="flexWrap: wrap"] {
+    gap: 10px !important;
+    margin-bottom: 22px !important;
+  }
+  
+  /* Увеличиваем отступы у фильтров таблицы */
+  div[style*="display: grid"][style*="gridTemplateColumns: repeat(auto-fit, minmax(200px, 1fr))"][style*="marginBottom: 25px"] {
+    gap: 15px !important;
+    margin-bottom: 22px !important;
+  }
+  
+  /* Увеличиваем отступы у пагинации */
+  div[style*="display: flex"][style*="justifyContent: center"] {
+    margin-top: 22px !important;
+    gap: 15px !important;
+  }
+  
+  /* Увеличиваем отступы у расширенной информации о товаре */
+  div[style*="display: grid"][style*="gridTemplateColumns: repeat(auto-fit, minmax(250px, 1fr))"][style*="gap: 20px"] {
+    gap: 20px !important;
+  }
+  
+  /* Увеличиваем отступы у всех элементов с графиками */
+  div[style*="background: white"][style*="borderRadius: 20px"][style*="boxShadow: 0 10px 30px rgba(0,0,0,0.1)"] {
+    margin-bottom: 22px !important;
+  }
+  
+  /* Увеличиваем отступы у заголовков блоков */
+  h2[style*="fontSize: 1.8rem"] {
+    margin-bottom: 22px !important;
+  }
+  
+  /* Увеличиваем отступы у подзаголовков */
+  h3[style*="fontSize: 1.3rem"] {
+    margin-bottom: 20px !important;
+  }
+  
+  /* Увеличиваем отступы у всех карточек с метриками */
+  div[style*="background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)"] {
+    margin-bottom: 10px !important;
+  }
+  
+  /* Увеличиваем отступы у всех элементов с рекомендациями */
+  div[style*="background: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%)"],
+  div[style*="background: linear-gradient(135deg, #dcfce7 0%, #f0fdf4 100%)"],
+  div[style*="background: linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%)"],
+  div[style*="background: linear-gradient(135deg, #fee2e2 0%, #fef2f2 100%)"],
+  div[style*="background: linear-gradient(135deg, #f3e8ff 0%, #faf5ff 100%)"],
+  div[style*="background: linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 100%)"] {
+    margin-bottom: 15px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .brand-top-products-grid {
+    gap: 10px !important;
+  }
+  
+  .brand-charts-grid {
+    gap: 10px !important;
+  }
+  
+  .brand-top-products-grid > div {
+    padding: 10px !important;
+  }
+  
+  .brand-top-products-grid img {
+    width: 50px !important;
+    height: 50px !important;
+  }
+  
+  .brand-top-products-grid h4 {
+    font-size: 0.8rem !important;
+  }
+  
+  .brand-top-products-grid div[style*="fontSize: 0.9rem"] {
+    font-size: 0.7rem !important;
+  }
+  
+  .brand-top-products-grid div[style*="fontSize: 0.85rem"] {
+    font-size: 0.65rem !important;
+  }
+  
+  .brand-top-products-grid div[style*="fontSize: 0.8rem"] {
+    font-size: 0.6rem !important;
+  }
+  
+  /* Еще более компактные размеры для графиков */
+  .brand-charts-grid > div {
+    padding: 8px !important;
+    overflow: hidden !important;
+  }
+  
+  .brand-charts-grid canvas {
+    max-width: 100% !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+  
+  div[style*="background: #f9fafb"] {
+    padding: 8px !important;
+    overflow: hidden !important;
+  }
+  
+  canvas {
+    max-width: 100% !important;
+    width: 100% !important;
+    overflow-x: hidden !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .brand-top-products-grid {
+    gap: 8px !important;
+  }
+  
+  .brand-charts-grid {
+    gap: 8px !important;
+  }
+  
+  .brand-top-products-grid > div {
+    padding: 8px !important;
+  }
+  
+  .brand-top-products-grid img {
+    width: 40px !important;
+    height: 40px !important;
+  }
+  
+  .brand-top-products-grid h4 {
+    font-size: 0.7rem !important;
+  }
+  
+  .brand-top-products-grid div[style*="fontSize: 0.9rem"] {
+    font-size: 0.6rem !important;
+  }
+  
+  .brand-top-products-grid div[style*="fontSize: 0.85rem"] {
+    font-size: 0.55rem !important;
+  }
+  
+  .brand-top-products-grid div[style*="fontSize: 0.8rem"] {
+    font-size: 0.5rem !important;
+  }
+  
+  /* Минимальные размеры для графиков */
+  .brand-charts-grid > div {
+    padding: 5px !important;
+    overflow: hidden !important;
+  }
+  
+  .brand-charts-grid canvas {
+    max-width: 100% !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+  
+  div[style*="background: #f9fafb"] {
+    padding: 5px !important;
+    overflow: hidden !important;
+  }
+  
+  canvas {
+    max-width: 100% !important;
+    width: 100% !important;
+    overflow-x: hidden !important;
+  }
+}
+
+/* Глобальные стили для всех графиков Chart.js */
+@media (max-width: 768px) {
+  /* Оптимальные размеры для всех графиков */
+  canvas {
+    max-width: 100% !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+  
+  /* Оптимальные размеры для контейнеров с графиками */
+  div[style*="padding: 25px"] {
+    padding: 10px !important;
+  }
+  
+  /* Специально для Chart.js контейнеров */
+  div[style*="background: #f9fafb"] {
+    padding: 10px !important;
+    overflow: hidden !important;
+  }
+  
+  /* Оптимальные размеры для всех графиков */
+  .recharts-wrapper {
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+  
+  /* Специально для Chart.js */
+  canvas[style*="width"] {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Еще более компактные размеры графиков */
+  canvas {
+    max-width: 100% !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+  
+  div[style*="padding: 25px"] {
+    padding: 5px !important;
+  }
+  
+  div[style*="background: #f9fafb"] {
+    padding: 5px !important;
+    overflow: hidden !important;
+  }
+  
+  .recharts-wrapper {
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+  
+  canvas[style*="width"] {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 360px) {
+  /* Минимальные размеры графиков */
+  canvas {
+    max-width: 100% !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+  
+  div[style*="padding: 25px"] {
+    padding: 3px !important;
+  }
+  
+  div[style*="background: #f9fafb"] {
+    padding: 3px !important;
+    overflow: hidden !important;
+  }
+  
+  .recharts-wrapper {
+    max-width: 100% !important;
+    overflow: hidden !important;
+  }
+  
+  canvas[style*="width"] {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+}
+
+/* Принудительное сжатие основного контейнера */
+@media (max-width: 768px) {
+  /* Сжимаем основной контейнер */
+  .max-w-7xl {
+    max-width: 100% !important;
+    padding-left: 4px !important;
+    padding-right: 4px !important;
+  }
+  
+  /* Сжимаем все карточки */
+  [style*="padding: 30px"] {
+    padding: 15px !important;
+  }
+  
+  [style*="padding: 24px"] {
+    padding: 12px !important;
+  }
+  
+  [style*="padding: 20px"] {
+    padding: 10px !important;
+  }
+  
+  /* Сжимаем заголовки */
+  [style*="fontSize: 1.8rem"] {
+    font-size: 1.2rem !important;
+  }
+  
+  [style*="fontSize: 1.5rem"] {
+    font-size: 1.1rem !important;
+  }
+  
+  [style*="fontSize: 1.2rem"] {
+    font-size: 1rem !important;
+  }
+  
+  /* Сжимаем кнопки */
+  [style*="padding: 8px 16px"] {
+    padding: 6px 12px !important;
+  }
+  
+  [style*="padding: 10px 20px"] {
+    padding: 8px 16px !important;
+  }
+  
+  /* Оптимальные размеры для всех контейнеров */
+  div[style*="borderRadius: 20px"] {
+    padding: 10px !important;
+  }
+  
+  div[style*="borderRadius: 15px"] {
+    padding: 8px !important;
+  }
+  
+  /* Оптимальные размеры для элементов с графиками */
+  div[style*="background: #f9fafb"] {
+    padding: 5px !important;
+    overflow: hidden !important;
+  }
+  
+  /* Оптимальные размеры для всех canvas элементов */
+  canvas {
+    max-width: 100% !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+}
+
+/* Принудительное сжатие контента для всех мобильных устройств */
+@media (max-width: 768px) {
+  /* Принудительно ограничиваем ширину */
+  body, html {
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+  
+  /* Сжимаем все контейнеры */
+  .container, .mx-auto, .max-w-7xl {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  
+  /* Уменьшаем отступы у всех элементов */
+  * {
+    box-sizing: border-box !important;
+  }
+  
+  /* Сжимаем изображения */
+  img {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+  
+  /* Уменьшаем размеры всех элементов */
+  .text-lg { font-size: 0.875rem !important; }
+  .text-xl { font-size: 1rem !important; }
+  .text-2xl { font-size: 1.125rem !important; }
+  .text-3xl { font-size: 1.25rem !important; }
+  
+  /* Уменьшаем отступы у всех элементов */
+  .m-4, .m-6, .m-8 { margin: 0.5rem !important; }
+  .mt-4, .mt-6, .mt-8 { margin-top: 0.5rem !important; }
+  .mb-4, .mb-6, .mb-8 { margin-bottom: 0.5rem !important; }
+  .ml-4, .ml-6, .ml-8 { margin-left: 0.5rem !important; }
+  .mr-4, .mr-6, .mr-8 { margin-right: 0.5rem !important; }
+}
+
+@media (max-width: 480px) {
+  /* Еще больше сжимаем */
+  .text-lg { font-size: 0.8rem !important; }
+  .text-xl { font-size: 0.875rem !important; }
+  .text-2xl { font-size: 1rem !important; }
+  .text-3xl { font-size: 1.125rem !important; }
+  
+  .m-4, .m-6, .m_8 { margin: 0.25rem !important; }
+  .mt-4, .mt-6, .mt-8 { margin-top: 0.25rem !important; }
+  .mb-4, .mb-6, .mb-8 { margin-bottom: 0.25rem !important; }
+  .ml-4, .ml-6, .ml-8 { margin-left: 0.25rem !important; }
+  .mr-4, .mr-6, .mr-8 { margin-right: 0.25rem !important; }
+}
+
+@media (max-width: 360px) {
+  /* Минимальные размеры */
+  .text-lg { font-size: 0.75rem !important; }
+  .text-xl { font-size: 0.8rem !important; }
+  .text-2xl { font-size: 0.875rem !important; }
+  .text-3xl { font-size: 1rem !important; }
+  
+  .m-4, .m-6, .m-8 { margin: 0.125rem !important; }
+  .mt-4, .mt-6, .mt-8 { margin-top: 0.125rem !important; }
+  .mb-4, .mb-6, .mb-8 { margin-bottom: 0.125rem !important; }
+  .ml-4, .ml-6, .ml-8 { margin-left: 0.125rem !important; }
+  .mr-4, .mr-6, .mr-8 { margin-right: 0.125rem !important; }
+} 

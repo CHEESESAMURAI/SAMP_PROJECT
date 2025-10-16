@@ -1,135 +1,252 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import authService, { User, AuthCredentials, SignupData } from '../services/authService';
-import { useNavigate } from 'react-router-dom';
+import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { User, SubscriptionStats } from '../types';
+import { authAPI } from '../services/api';
 
-interface AuthContextType {
+interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (credentials: AuthCredentials) => Promise<void>;
-  signup: (userData: SignupData) => Promise<void>;
-  logout: () => void;
-  error: string | null;
+  subscriptionStats: SubscriptionStats | null;
 }
+
+interface AuthContextType extends AuthState {
+  login: (email: string, password: string) => Promise<boolean>;
+  loginWithTelegram: (telegramData: any) => Promise<boolean>;
+  logout: () => void;
+  register: (email: string, password: string, username?: string) => Promise<boolean>;
+  updateBalance: (amount: number) => void;
+  updateSubscription: (subscription: any) => void;
+  refreshUser: () => Promise<void>;
+}
+
+type AuthAction =
+  | { type: 'LOGIN_START' }
+  | { type: 'LOGIN_SUCCESS'; payload: { user: User; subscriptionStats: SubscriptionStats } }
+  | { type: 'LOGIN_FAILURE' }
+  | { type: 'LOGOUT' }
+  | { type: 'UPDATE_BALANCE'; payload: number }
+  | { type: 'UPDATE_SUBSCRIPTION'; payload: any }
+  | { type: 'SET_LOADING'; payload: boolean };
+
+const initialState: AuthState = {
+  user: null,
+  isAuthenticated: false,
+  isLoading: true,
+  subscriptionStats: null,
+};
+
+const authReducer = (state: AuthState, action: AuthAction): AuthState => {
+  switch (action.type) {
+    case 'LOGIN_START':
+      return { ...state, isLoading: true };
+    case 'LOGIN_SUCCESS':
+      return {
+        ...state,
+        user: action.payload.user,
+        subscriptionStats: action.payload.subscriptionStats,
+        isAuthenticated: true,
+        isLoading: false,
+      };
+    case 'LOGIN_FAILURE':
+      return {
+        ...state,
+        user: null,
+        subscriptionStats: null,
+        isAuthenticated: false,
+        isLoading: false,
+      };
+    case 'LOGOUT':
+      return {
+        ...state,
+        user: null,
+        subscriptionStats: null,
+        isAuthenticated: false,
+        isLoading: false,
+      };
+    case 'UPDATE_BALANCE':
+      return {
+        ...state,
+        user: state.user ? { ...state.user, balance: action.payload } : null,
+      };
+    case 'UPDATE_SUBSCRIPTION':
+      return {
+        ...state,
+        subscriptionStats: action.payload,
+      };
+    case 'SET_LOADING':
+      return { ...state, isLoading: action.payload };
+    default:
+      return state;
+  }
+};
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
 interface AuthProviderProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
-export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [state, dispatch] = useReducer(authReducer, initialState);
 
+  // Check for existing session on mount
   useEffect(() => {
     const checkAuth = async () => {
-      setIsLoading(true);
       try {
         const token = localStorage.getItem('token');
-        const userId = localStorage.getItem('userId');
-        
-        if (token && userId) {
-          const userData = await authService.getCurrentUser(parseInt(userId, 10));
-          setUser(userData);
+        if (token) {
+          const response = await authAPI.verifyToken();
+          if (response.success && response.data) {
+            dispatch({
+              type: 'LOGIN_SUCCESS',
+              payload: {
+                user: response.data.user,
+                subscriptionStats: response.data.subscriptionStats,
+              },
+            });
+          } else {
+            localStorage.removeItem('token');
+            dispatch({ type: 'LOGIN_FAILURE' });
+          }
+        } else {
+          dispatch({ type: 'SET_LOADING', payload: false });
         }
-      } catch (err) {
-        console.error('Authentication error:', err);
+      } catch (error) {
+        console.error('Auth check failed:', error);
         localStorage.removeItem('token');
-        localStorage.removeItem('userId');
-      } finally {
-        setIsLoading(false);
+        dispatch({ type: 'LOGIN_FAILURE' });
       }
     };
 
     checkAuth();
   }, []);
 
-  const login = async (credentials: AuthCredentials) => {
-    setIsLoading(true);
-    setError(null);
-    
+  const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const response = await authService.login(credentials);
-      localStorage.setItem('token', response.access_token);
+      dispatch({ type: 'LOGIN_START' });
+      const response = await authAPI.login(email, password);
       
-      // Извлекаем ID пользователя из токена (упрощенно)
-      // В реальном приложении лучше использовать JWT декодирование
-      const userId = parseUserIdFromToken(response.access_token);
-      localStorage.setItem('userId', userId.toString());
-      
-      const userData = await authService.getCurrentUser(userId);
-      setUser(userData);
-      
-      navigate('/dashboard');
-    } catch (err: any) {
-      console.error('Login error:', err);
-      setError(err.response?.data?.detail || 'Ошибка при входе');
-      throw err;
-    } finally {
-      setIsLoading(false);
+      if (response.success && response.data) {
+        localStorage.setItem('token', response.data.token);
+        dispatch({
+          type: 'LOGIN_SUCCESS',
+          payload: {
+            user: response.data.user,
+            subscriptionStats: response.data.subscriptionStats,
+          },
+        });
+        return true;
+      } else {
+        dispatch({ type: 'LOGIN_FAILURE' });
+        return false;
+      }
+    } catch (error) {
+      console.error('Login failed:', error);
+      dispatch({ type: 'LOGIN_FAILURE' });
+      return false;
     }
   };
 
-  const signup = async (userData: SignupData) => {
-    setIsLoading(true);
-    setError(null);
-    
+  const loginWithTelegram = async (telegramData: any): Promise<boolean> => {
     try {
-      await authService.signup(userData);
-      await login({
-        username: userData.username,
-        password: userData.password
-      });
-    } catch (err: any) {
-      console.error('Signup error:', err);
-      setError(err.response?.data?.detail || 'Ошибка при регистрации');
-      throw err;
-    } finally {
-      setIsLoading(false);
+      dispatch({ type: 'LOGIN_START' });
+      const response = await authAPI.loginWithTelegram(telegramData);
+      
+      if (response.success && response.data) {
+        localStorage.setItem('token', response.data.token);
+        dispatch({
+          type: 'LOGIN_SUCCESS',
+          payload: {
+            user: response.data.user,
+            subscriptionStats: response.data.subscriptionStats,
+          },
+        });
+        return true;
+      } else {
+        dispatch({ type: 'LOGIN_FAILURE' });
+        return false;
+      }
+    } catch (error) {
+      console.error('Telegram login failed:', error);
+      dispatch({ type: 'LOGIN_FAILURE' });
+      return false;
+    }
+  };
+
+  const register = async (email: string, password: string, username?: string): Promise<boolean> => {
+    try {
+      dispatch({ type: 'LOGIN_START' });
+      const response = await authAPI.register(email, password, username);
+      
+      if (response.success && response.data) {
+        localStorage.setItem('token', response.data.token);
+        dispatch({
+          type: 'LOGIN_SUCCESS',
+          payload: {
+            user: response.data.user,
+            subscriptionStats: response.data.subscriptionStats,
+          },
+        });
+        return true;
+      } else {
+        dispatch({ type: 'LOGIN_FAILURE' });
+        return false;
+      }
+    } catch (error) {
+      console.error('Registration failed:', error);
+      dispatch({ type: 'LOGIN_FAILURE' });
+      return false;
     }
   };
 
   const logout = () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('userId');
-    setUser(null);
-    navigate('/login');
+    dispatch({ type: 'LOGOUT' });
   };
 
-  // Временная функция для извлечения ID пользователя из токена
-  const parseUserIdFromToken = (token: string): number => {
+  const updateBalance = (amount: number) => {
+    dispatch({ type: 'UPDATE_BALANCE', payload: amount });
+  };
+
+  const updateSubscription = (subscription: any) => {
+    dispatch({ type: 'UPDATE_SUBSCRIPTION', payload: subscription });
+  };
+
+  const refreshUser = async () => {
     try {
-      // В реальном приложении здесь должно быть JWT декодирование
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const payload = JSON.parse(window.atob(base64));
-      return payload.sub;
-    } catch (err) {
-      console.error('Error parsing token:', err);
-      return 0;
+      const response = await authAPI.getCurrentUser();
+      if (response.success && response.data) {
+        dispatch({
+          type: 'LOGIN_SUCCESS',
+          payload: {
+            user: response.data.user,
+            subscriptionStats: response.data.subscriptionStats,
+          },
+        });
+      }
+    } catch (error) {
+      console.error('Failed to refresh user:', error);
     }
   };
 
-  const value = {
-    user,
-    isAuthenticated: !!user,
-    isLoading,
+  const value: AuthContextType = {
+    ...state,
     login,
-    signup,
+    loginWithTelegram,
     logout,
-    error
+    register,
+    updateBalance,
+    updateSubscription,
+    refreshUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
-
-export const useAuth = (): AuthContextType => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
 }; 

@@ -1,262 +1,423 @@
-import React from 'react';
-import {
-  Box,
-  Typography,
-  Grid as MuiGrid,
-  Card,
-  CardContent,
-  Button,
-  Paper,
-  Divider,
-  Avatar,
-  Chip,
-  IconButton,
-  List,
-  ListItem,
-  ListItemText,
-} from '@mui/material';
-
-// Создаем компоненты-обертки для Grid для решения проблем с типизацией
-const Grid = MuiGrid;
-const GridItem = (props: any) => <MuiGrid item {...props} />;
-
-// Иконки
-import PersonIcon from '@mui/icons-material/Person';
-import ShoppingBasketIcon from '@mui/icons-material/ShoppingBasket';
-import CategoryIcon from '@mui/icons-material/Category';
-import SearchIcon from '@mui/icons-material/Search';
-import MonetizationOnIcon from '@mui/icons-material/MonetizationOn';
-import StoreIcon from '@mui/icons-material/Store';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import AssessmentIcon from '@mui/icons-material/Assessment';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
-import AutorenewIcon from '@mui/icons-material/Autorenew';
-import GradeIcon from '@mui/icons-material/Grade';
-import EventNoteIcon from '@mui/icons-material/EventNote';
-import AdsClickIcon from '@mui/icons-material/AdsClick';
-import VisibilityIcon from '@mui/icons-material/Visibility';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import {
+  BarChart3,
+  Package,
+  Target,
+  TrendingUp,
+  Calendar,
+  Users,
+  Brain,
+  Globe,
+  Truck,
+  Monitor,
+  Plus,
+  ArrowRight,
+  Activity,
+  DollarSign,
+  ShoppingCart,
+} from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { userAPI } from '../services/api';
+import { DashboardData, TrackedItem } from '../types';
+import Card from '../components/UI/Card';
+import Button from '../components/UI/Button';
+import LoadingSpinner from '../components/UI/LoadingSpinner';
+
+interface QuickAction {
+  name: string;
+  href: string;
+  icon: React.ElementType;
+  description: string;
+  color: string;
+  cost?: number;
+}
 
 const Dashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user, subscriptionStats } = useAuth();
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const actionItems = [
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const response = await userAPI.getDashboardData();
+        if (response.success && response.data) {
+          setDashboardData(response.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  const quickActions: QuickAction[] = [
     {
-      title: "Анализ артикула", 
-      icon: <ShoppingBasketIcon />, 
-      color: "#1976d2", 
-      path: "/product-analysis"
+      name: 'Анализ товара',
+      href: '/analytics/product',
+      icon: Package,
+      description: 'Подробный анализ конкретного товара',
+      color: 'bg-blue-500',
+      cost: 10,
     },
     {
-      title: "Анализ бренда", 
-      icon: <GradeIcon />, 
-      color: "#9c27b0", 
-      path: "/brand-analysis"
+      name: 'Анализ бренда',
+      href: '/analytics/brand',
+      icon: Target,
+      description: 'Исследование бренда и конкурентов',
+      color: 'bg-purple-500',
+      cost: 20,
     },
     {
-      title: "Анализ поставщика", 
-      icon: <StoreIcon />, 
-      color: "#2e7d32", 
-      path: "/supplier-analysis"
+      name: 'Анализ ниши',
+      href: '/analytics/niche',
+      icon: TrendingUp,
+      description: 'Изучение рыночной ниши',
+      color: 'bg-green-500',
+      cost: 25,
     },
     {
-      title: "Анализ категорий", 
-      icon: <CategoryIcon />, 
-      color: "#ed6c02", 
-      path: "/category-analysis"
+      name: 'План поставок',
+      href: '/planning/supply',
+      icon: Truck,
+      description: 'Планирование пополнения товаров',
+      color: 'bg-orange-500',
+      cost: 30,
     },
     {
-      title: "Анализ предметов", 
-      icon: <AssessmentIcon />, 
-      color: "#d32f2f", 
-      path: "/item-analysis"
+      name: 'Мониторинг рекламы',
+      href: '/planning/ads',
+      icon: Monitor,
+      description: 'Анализ эффективности рекламы',
+      color: 'bg-red-500',
+      cost: 35,
     },
     {
-      title: "Ниши и тренды", 
-      icon: <TrendingUpIcon />, 
-      color: "#0288d1", 
-      path: "/niche-analysis"
+      name: 'ИИ помощник',
+      href: '/ai/generate',
+      icon: Brain,
+      description: 'Генерация контента с помощью ИИ',
+      color: 'bg-indigo-500',
+      cost: 15,
     },
-    {
-      title: "Анализ внешки", 
-      icon: <VisibilityIcon />, 
-      color: "#7b1fa2", 
-      path: "/visual-analysis"
-    },
-    {
-      title: "Мониторинг рекламы", 
-      icon: <AdsClickIcon />, 
-      color: "#1565c0", 
-      path: "/ad-monitoring"
-    },
-    {
-      title: "Помощь с нейронкой", 
-      icon: <SmartToyIcon />, 
-      color: "#00796b", 
-      path: "/ai-assistant"
-    },
-    {
-      title: "План поставок", 
-      icon: <EventNoteIcon />, 
-      color: "#bf360c", 
-      path: "/supply-plan"
-    },
-    {
-      title: "Отслеживание", 
-      icon: <AutorenewIcon />, 
-      color: "#2e7d32", 
-      path: "/tracking"
-    },
-    {
-      title: "Глобальный поиск", 
-      icon: <SearchIcon />, 
-      color: "#0288d1", 
-      path: "/global-search"
-    }
   ];
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <LoadingSpinner size="lg" text="Загрузка дашборда..." />
+      </div>
+    );
+  }
+
+  const getSubscriptionColor = (subscription: string) => {
+    switch (subscription) {
+      case 'business':
+        return 'text-yellow-600 bg-yellow-100';
+      case 'pro':
+        return 'text-blue-600 bg-blue-100';
+      default:
+        return 'text-gray-600 bg-gray-100';
+    }
+  };
+
   return (
-    <Box>
-      <Typography variant="h3" component="h1" gutterBottom align="center" sx={{ fontWeight: 500, mb: 4 }}>
-        Личный кабинет
-      </Typography>
+    <div className="space-y-6">
+      {/* Welcome Header */}
+      <div className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-lg shadow-lg p-6 text-white">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">
+              Добро пожаловать, {user?.username || 'Пользователь'}!
+            </h1>
+            <p className="text-primary-100 mt-1">
+              Ваш персональный центр аналитики Wildberries
+            </p>
+          </div>
+          <div className="text-right">
+            <div className="text-sm text-primary-100">Баланс</div>
+            <div className="text-2xl font-bold">{user?.balance}₽</div>
+            <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getSubscriptionColor(user?.subscription || 'free')}`}>
+              {user?.subscription.toUpperCase()}
+            </div>
+          </div>
+        </div>
+      </div>
 
-      <Grid container spacing={3}>
-        {/* Блок профиля */}
-        <GridItem xs={12} md={4} lg={3}>
-          <Paper elevation={2} sx={{ p: 3, height: '100%' }}>
-            <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 500 }}>
-              Ваш профиль
-            </Typography>
-            <Divider sx={{ mb: 2 }} />
-            
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-              <Avatar sx={{ bgcolor: '#1976d2', mr: 2 }}>
-                <PersonIcon />
-              </Avatar>
-              <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                {user?.username || 'Пользователь'}
-              </Typography>
-            </Box>
-            
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="body2" color="text.secondary">
-                Баланс
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <MonetizationOnIcon sx={{ color: 'success.main', mr: 1 }} />
-                <Typography>
-                  {user?.balance?.toLocaleString() || '0'} ₽
-                </Typography>
-              </Box>
-            </Box>
-            
-            <Box sx={{ mb: 2 }}>
-              <Typography variant="body2" color="text.secondary">
-                Подписка
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Typography>free</Typography>
-                <Chip label="Активна" color="success" size="small" />
-              </Box>
-            </Box>
-            
-            <Button 
-              variant="outlined" 
-              fullWidth 
-              component={Link} 
-              to="/profile" 
-              sx={{ mt: 1 }}
-            >
-              УПРАВЛЕНИЕ ПРОФИЛЕМ
-            </Button>
-          </Paper>
-        </GridItem>
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <BarChart3 className="h-8 w-8 text-blue-600" />
+            </div>
+            <div className="ml-5 w-0 flex-1">
+              <dl>
+                <dt className="text-sm font-medium text-gray-500 truncate">
+                  Всего анализов
+                </dt>
+                <dd className="text-lg font-medium text-gray-900">
+                  {dashboardData?.recentAnalyses.length || 0}
+                </dd>
+              </dl>
+            </div>
+          </div>
+        </Card>
 
-        {/* Основной контент */}
-        <GridItem xs={12} md={8} lg={9}>
-          {/* Быстрые действия */}
-          <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
-            <Typography variant="h5" component="h2" gutterBottom sx={{ fontWeight: 500 }}>
-              Быстрые действия
-            </Typography>
-            <Divider sx={{ mb: 3 }} />
-            
-            <Grid container spacing={2}>
-              {actionItems.slice(0, 9).map((item, index) => (
-                <GridItem xs={12} sm={6} md={4} key={index}>
-                  <Button
-                    variant="contained"
-                    component={Link}
-                    to={item.path}
-                    fullWidth
-                    startIcon={item.icon}
-                    sx={{ 
-                      py: 2, 
-                      bgcolor: item.color, 
-                      '&:hover': { bgcolor: item.color, filter: 'brightness(90%)' },
-                      justifyContent: 'flex-start',
-                      mb: 1
-                    }}
-                  >
-                    {item.title}
-                  </Button>
-                </GridItem>
-              ))}
-              
-              {actionItems.slice(9).map((item, index) => (
-                <GridItem xs={12} sm={6} md={4} key={index + 9}>
-                  <Button
-                    variant="contained"
-                    component={Link}
-                    to={item.path}
-                    fullWidth
-                    startIcon={item.icon}
-                    sx={{ 
-                      py: 2, 
-                      bgcolor: item.color, 
-                      '&:hover': { bgcolor: item.color, filter: 'brightness(90%)' },
-                      justifyContent: 'flex-start',
-                      mb: 1 
-                    }}
-                  >
-                    {item.title}
-                  </Button>
-                </GridItem>
-              ))}
-            </Grid>
-          </Paper>
+        <Card>
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <ShoppingCart className="h-8 w-8 text-green-600" />
+            </div>
+            <div className="ml-5 w-0 flex-1">
+              <dl>
+                <dt className="text-sm font-medium text-gray-500 truncate">
+                  Отслеживаемых товаров
+                </dt>
+                <dd className="text-lg font-medium text-gray-900">
+                  {dashboardData?.trackedItems.length || 0}
+                </dd>
+              </dl>
+            </div>
+          </div>
+        </Card>
 
-          {/* Отслеживаемые товары */}
-          <Paper elevation={2} sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-              <Typography variant="h5" component="h2" sx={{ fontWeight: 500 }}>
-                Отслеживаемые товары
-              </Typography>
-              <Button 
-                variant="outlined" 
-                size="small" 
-                component={Link} 
-                to="/tracking"
+        <Card>
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <Activity className="h-8 w-8 text-purple-600" />
+            </div>
+            <div className="ml-5 w-0 flex-1">
+              <dl>
+                <dt className="text-sm font-medium text-gray-500 truncate">
+                  Активность
+                </dt>
+                <dd className="text-lg font-medium text-gray-900">
+                  Высокая
+                </dd>
+              </dl>
+            </div>
+          </div>
+        </Card>
+
+        <Card>
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <DollarSign className="h-8 w-8 text-orange-600" />
+            </div>
+            <div className="ml-5 w-0 flex-1">
+              <dl>
+                <dt className="text-sm font-medium text-gray-500 truncate">
+                  Экономия
+                </dt>
+                <dd className="text-lg font-medium text-gray-900">
+                  {Math.floor(Math.random() * 50000)}₽
+                </dd>
+              </dl>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Quick Actions */}
+        <div className="lg:col-span-2">
+          <Card>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-medium text-gray-900">
+                Быстрые действия
+              </h3>
+              <Link
+                to="/analytics"
+                className="text-sm text-primary-600 hover:text-primary-500 font-medium"
               >
-                СМОТРЕТЬ ВСЕ
-              </Button>
-            </Box>
-            <Divider sx={{ mb: 3 }} />
+                Все инструменты
+              </Link>
+            </div>
             
-            <Box sx={{ textAlign: 'center', py: 4 }}>
-              <Typography variant="body1" color="text.secondary">
-                У вас пока нет отслеживаемых товаров. 
-                <Link to="/product-analysis" style={{ marginLeft: 8, textDecoration: 'none' }}>
-                  Добавить товар
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {quickActions.map((action) => (
+                <Link
+                  key={action.href}
+                  to={action.href}
+                  className="relative group bg-gray-50 p-4 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+                >
+                  <div className="flex items-start">
+                    <div className={`flex-shrink-0 w-8 h-8 ${action.color} rounded-lg flex items-center justify-center`}>
+                      <action.icon className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="ml-4 flex-1">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-medium text-gray-900">
+                          {action.name}
+                        </h4>
+                        {action.cost && (
+                          <span className="text-xs text-gray-500">
+                            {action.cost}₽
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1 text-xs text-gray-500">
+                        {action.description}
+                      </p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors duration-200" />
+                  </div>
                 </Link>
-              </Typography>
-            </Box>
-          </Paper>
-        </GridItem>
-      </Grid>
-    </Box>
+              ))}
+            </div>
+          </Card>
+        </div>
+
+        {/* Recent Activity & Tracked Items */}
+        <div className="space-y-6">
+          {/* Recent Analyses */}
+          <Card>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium text-gray-900">
+                Последние анализы
+              </h3>
+              <Link
+                to="/profile"
+                className="text-sm text-primary-600 hover:text-primary-500"
+              >
+                Все
+              </Link>
+            </div>
+            
+            {dashboardData?.recentAnalyses.length ? (
+              <div className="space-y-3">
+                {dashboardData.recentAnalyses.slice(0, 5).map((analysis, index) => (
+                  <div key={index} className="flex items-center space-x-3">
+                    <div className="w-2 h-2 bg-primary-400 rounded-full" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-900 truncate">
+                        {analysis.title}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(analysis.timestamp).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <BarChart3 className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-medium text-gray-900">
+                  Анализов пока нет
+                </h3>
+                <p className="mt-1 text-xs text-gray-500">
+                  Начните с анализа товара или бренда
+                </p>
+                <div className="mt-3">
+                  <Button size="sm" variant="primary">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Новый анализ
+                  </Button>
+                </div>
+              </div>
+            )}
+          </Card>
+
+          {/* Tracked Items */}
+          <Card>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium text-gray-900">
+                Отслеживаемые товары
+              </h3>
+              <Link
+                to="/tracking"
+                className="text-sm text-primary-600 hover:text-primary-500"
+              >
+                Все
+              </Link>
+            </div>
+            
+            {dashboardData?.trackedItems.length ? (
+              <div className="space-y-3">
+                {dashboardData.trackedItems.slice(0, 3).map((item) => (
+                  <div key={item.article} className="flex items-center justify-between">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-900 truncate">
+                        {item.name}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Арт. {item.article}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-gray-900">
+                        {item.price}₽
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {item.stock} шт.
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <Package className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-medium text-gray-900">
+                  Товаров нет
+                </h3>
+                <p className="mt-1 text-xs text-gray-500">
+                  Добавьте товары для отслеживания
+                </p>
+                <div className="mt-3">
+                  <Button size="sm" variant="primary">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Добавить товар
+                  </Button>
+                </div>
+              </div>
+            )}
+          </Card>
+        </div>
+      </div>
+
+      {/* Subscription Limits */}
+      {subscriptionStats && (
+        <Card>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">
+            Использование лимитов подписки
+          </h3>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {Object.entries(subscriptionStats.actions).map(([action, data]) => {
+              const percentage = data.limit === 'unlimited' ? 0 : (data.used / (data.limit as number)) * 100;
+              return (
+                <div key={action} className="bg-gray-50 p-4 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-sm font-medium text-gray-700 capitalize">
+                      {action.replace('_', ' ')}
+                    </h4>
+                    <span className="text-sm text-gray-500">
+                      {data.used}/{data.limit === 'unlimited' ? '∞' : data.limit}
+                    </span>
+                  </div>
+                  {data.limit !== 'unlimited' && (
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full ${
+                          percentage > 80 ? 'bg-red-500' : percentage > 60 ? 'bg-yellow-500' : 'bg-green-500'
+                        }`}
+                        style={{ width: `${Math.min(percentage, 100)}%` }}
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
+    </div>
   );
 };
 

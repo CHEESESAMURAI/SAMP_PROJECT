@@ -1,143 +1,151 @@
 import React from 'react';
-import { BrowserRouter as Router, Switch, Route, Redirect } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import { AuthProvider } from './contexts/AuthContext';
-import { MainLayout } from './layouts/MainLayout';
-import { Login } from './pages/Login';
-import { Signup } from './pages/Signup';
-import { ProductAnalysis } from './pages/ProductAnalysis';
-import { NicheAnalysis } from './pages/NicheAnalysis';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import MainLayout from './components/Layout/MainLayout';
+import Login from './pages/Login';
+import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
-import Tracking from './pages/Tracking';
-import Profile from './pages/Profile';
-import ComingSoonPage from './pages/ComingSoonPage';
-import './App.css';
+import LoadingSpinner from './components/UI/LoadingSpinner';
 
-// Создаем тему приложения
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#2196f3',
-    },
-    secondary: {
-      main: '#f50057',
+// Analytics pages
+import ProductAnalysis from './pages/Analytics/ProductAnalysis';
+import BrandAnalysis from './pages/Analytics/BrandAnalysis';
+import NicheAnalysis from './pages/Analytics/NicheAnalysis';
+import SupplierAnalysis from './pages/Analytics/SupplierAnalysis';
+import SeasonalityAnalysis from './pages/Analytics/SeasonalityAnalysis';
+import ExternalAnalysis from './pages/Analytics/ExternalAnalysis';
+import CategoryAnalysis from './pages/Analytics/CategoryAnalysis';
+
+// Planning pages
+import SupplyPlanning from './pages/Planning/SupplyPlanning';
+import AdMonitoring from './pages/Planning/AdMonitoring';
+
+// Search pages
+import GlobalSearch from './pages/Search/GlobalSearch';
+import BloggerSearch from './pages/Search/BloggerSearch';
+
+// AI pages
+import AIGeneration from './pages/AI/AIGeneration';
+import OracleQueries from './pages/AI/OracleQueries';
+
+// Account pages
+import Profile from './pages/Profile';
+import Subscription from './pages/Subscription';
+import Settings from './pages/Settings';
+
+// Create a query client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
     },
   },
 });
 
-// Компонент приватного маршрута
-const PrivateRoute = ({ children, ...rest }: { children: React.ReactNode; path: string; exact?: boolean }) => {
-  const isAuthenticated = localStorage.getItem('token') !== null;
-  return (
-    <Route
-      {...rest}
-      render={({ location }) =>
-        isAuthenticated ? (
-          children
-        ) : (
-          <Redirect
-            to={{
-              pathname: "/login",
-              state: { from: location }
-            }}
-          />
-        )
-      }
-    />
-  );
+// Protected Route component
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner size="lg" text="Загрузка..." />
+      </div>
+    );
+  }
+
+  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+};
+
+// Public Route component (redirect to dashboard if already authenticated)
+const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner size="lg" text="Загрузка..." />
+      </div>
+    );
+  }
+
+  return !isAuthenticated ? <>{children}</> : <Navigate to="/dashboard" replace />;
 };
 
 function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Router>
-        <AuthProvider>
-          <Switch>
-            <Route path="/login">
-              <Login />
-            </Route>
-            <Route path="/signup">
-              <Signup />
-            </Route>
-            
-            <MainLayout>
-              <Switch>
-                <Route exact path="/">
-                  <Redirect to="/dashboard" />
-                </Route>
-                
-                <PrivateRoute path="/dashboard" exact>
-                  <Dashboard />
-                </PrivateRoute>
-                
-                <PrivateRoute path="/product-analysis" exact>
-                  <ProductAnalysis />
-                </PrivateRoute>
-                
-                <PrivateRoute path="/niche-analysis" exact>
-                  <NicheAnalysis />
-                </PrivateRoute>
-                
-                <PrivateRoute path="/tracking" exact>
-                  <Tracking />
-                </PrivateRoute>
-                
-                <PrivateRoute path="/profile" exact>
-                  <Profile />
-                </PrivateRoute>
-                
-                <PrivateRoute path="/query-oracle" exact>
-                  <ComingSoonPage title="Оракул запросов" />
-                </PrivateRoute>
-                
-                {/* Новые маршруты для функций в разработке */}
-                <PrivateRoute path="/brand-analysis" exact>
-                  <ComingSoonPage title="Анализ бренда" />
-                </PrivateRoute>
-                
-                <PrivateRoute path="/supplier-analysis" exact>
-                  <ComingSoonPage title="Анализ поставщика" />
-                </PrivateRoute>
-                
-                <PrivateRoute path="/category-analysis" exact>
-                  <ComingSoonPage title="Анализ категорий" />
-                </PrivateRoute>
-                
-                <PrivateRoute path="/item-analysis" exact>
-                  <ComingSoonPage title="Анализ предметов" />
-                </PrivateRoute>
-                
-                <PrivateRoute path="/visual-analysis" exact>
-                  <ComingSoonPage title="Анализ внешки" />
-                </PrivateRoute>
-                
-                <PrivateRoute path="/ad-monitoring" exact>
-                  <ComingSoonPage title="Мониторинг рекламы" />
-                </PrivateRoute>
-                
-                <PrivateRoute path="/ai-assistant" exact>
-                  <ComingSoonPage title="Помощь с нейронкой" />
-                </PrivateRoute>
-                
-                <PrivateRoute path="/supply-plan" exact>
-                  <ComingSoonPage title="План поставок" />
-                </PrivateRoute>
-                
-                <PrivateRoute path="/global-search" exact>
-                  <ComingSoonPage title="Глобальный поиск" />
-                </PrivateRoute>
-                
-                <Route path="*">
-                  <Redirect to="/" />
-                </Route>
-              </Switch>
-            </MainLayout>
-          </Switch>
-        </AuthProvider>
-      </Router>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <Router>
+          <div className="App">
+            <Routes>
+              {/* Public routes */}
+              <Route
+                path="/login"
+                element={
+                  <PublicRoute>
+                    <Login />
+                  </PublicRoute>
+                }
+              />
+              <Route
+                path="/register"
+                element={
+                  <PublicRoute>
+                    <Register />
+                  </PublicRoute>
+                }
+              />
+
+              {/* Protected routes */}
+              <Route
+                path="/*"
+                element={
+                  <ProtectedRoute>
+                    <MainLayout />
+                  </ProtectedRoute>
+                }
+              >
+                {/* Dashboard */}
+                <Route path="dashboard" element={<Dashboard />} />
+
+                {/* Analytics routes */}
+                <Route path="analytics/product" element={<ProductAnalysis />} />
+                <Route path="analytics/brand" element={<BrandAnalysis />} />
+                <Route path="analytics/niche" element={<NicheAnalysis />} />
+                <Route path="analytics/supplier" element={<SupplierAnalysis />} />
+                <Route path="analytics/seasonality" element={<SeasonalityAnalysis />} />
+                <Route path="analytics/external" element={<ExternalAnalysis />} />
+                <Route path="analytics/category" element={<CategoryAnalysis />} />
+
+                {/* Planning routes */}
+                <Route path="planning/supply" element={<SupplyPlanning />} />
+                <Route path="planning/ads" element={<AdMonitoring />} />
+
+                {/* Search routes */}
+                <Route path="search/global" element={<GlobalSearch />} />
+                <Route path="search/bloggers" element={<BloggerSearch />} />
+
+                {/* AI routes */}
+                <Route path="ai/generate" element={<AIGeneration />} />
+                <Route path="ai/oracle" element={<OracleQueries />} />
+
+                {/* Account routes */}
+                <Route path="profile" element={<Profile />} />
+                <Route path="subscription" element={<Subscription />} />
+                <Route path="settings" element={<Settings />} />
+              </Route>
+
+              {/* Default redirect */}
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            </Routes>
+          </div>
+        </Router>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
 

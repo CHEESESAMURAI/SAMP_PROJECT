@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔗 Frontend ↔️ Backend Connection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f0f8ff;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid;
+        }
+        .success {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+        .pending {
+            background: #fff3cd;
+            border-color: #ffc107;
+            color: #856404;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .big-button {
+            font-size: 20px;
+            padding: 15px 30px;
+            background: #28a745;
+        }
+        .big-button:hover {
+            background: #1e7e34;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .status-container {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+        }
+        .status-box {
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            flex: 1;
+            margin: 0 10px;
+        }
+        .links {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .links a {
+            display: inline-block;
+            margin: 10px;
+            padding: 10px 20px;
+            background: #6c757d;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .links a:hover {
+            background: #545b62;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔗 WILDBOT Connection Test</h1>
+    
+    <div class="status-container">
+        <div class="status-box pending" id="frontend-status">
+            <h3>🌐 Frontend</h3>
+            <p>Status: <span id="frontend-text">Checking...</span></p>
+        </div>
+        
+        <div class="status-box pending" id="backend-status">
+            <h3>⚙️ Backend</h3>
+            <p>Status: <span id="backend-text">Checking...</span></p>
+        </div>
+        
+        <div class="status-box pending" id="connection-status">
+            <h3>🔗 Connection</h3>
+            <p>Status: <span id="connection-text">Checking...</span></p>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin: 30px 0;">
+        <button class="big-button" onclick="runFullTest()">🚀 RUN FULL CONNECTION TEST</button>
+    </div>
+
+    <div id="test-results"></div>
+
+    <div class="links">
+        <h3>🌐 Quick Links:</h3>
+        <a href="http://localhost:3000" target="_blank">📱 Frontend</a>
+        <a href="http://localhost:3000/dashboard" target="_blank">📊 Dashboard</a>
+        <a href="http://localhost:3000/login" target="_blank">🔑 Login</a>
+        <a href="http://localhost:8000/docs" target="_blank">📚 Backend API</a>
+    </div>
+
+    <div style="margin-top: 30px; padding: 20px; background: #e8f5e8; border-radius: 8px; border: 2px solid #28a745;">
+        <h3>📋 Demo Credentials:</h3>
+        <p><strong>Email:</strong> demo@wildbot.com</p>
+        <p><strong>Password:</strong> demo123</p>
+    </div>
+
+    <script>
+        function updateStatus(id, status, text) {
+            const element = document.getElementById(id);
+            const textElement = document.getElementById(id.replace('-status', '-text'));
+            
+            element.className = `status-box ${status}`;
+            textElement.textContent = text;
+        }
+
+        function addResult(message, isSuccess = true) {
+            const resultsDiv = document.getElementById('test-results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${isSuccess ? 'success' : 'error'}`;
+            resultDiv.innerHTML = `${isSuccess ? '✅' : '❌'} ${message}`;
+            resultsDiv.appendChild(resultDiv);
+            
+            // Auto scroll to bottom
+            resultDiv.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function testFrontend() {
+            try {
+                const response = await fetch('http://localhost:3000');
+                updateStatus('frontend-status', 'success', 'Running ✅');
+                addResult('Frontend server is running on port 3000');
+                return true;
+            } catch (error) {
+                updateStatus('frontend-status', 'error', 'Not running ❌');
+                addResult(`Frontend server not accessible: ${error.message}`, false);
+                return false;
+            }
+        }
+
+        async function testBackend() {
+            try {
+                const response = await fetch('http://localhost:8000/docs');
+                if (response.ok) {
+                    updateStatus('backend-status', 'success', 'Running ✅');
+                    addResult('Backend server is running on port 8000');
+                    return true;
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                updateStatus('backend-status', 'error', 'Not running ❌');
+                addResult(`Backend server not accessible: ${error.message}`, false);
+                return false;
+            }
+        }
+
+        async function testConnection() {
+            try {
+                // Test auth check endpoint
+                addResult('Testing auth/check endpoint...');
+                const authResponse = await fetch('http://localhost:8000/auth/check');
+                if (!authResponse.ok) {
+                    throw new Error(`Auth check failed: ${authResponse.status}`);
+                }
+                addResult('✅ Auth check endpoint working');
+
+                // Test login endpoint
+                addResult('Testing login endpoint...');
+                const loginResponse = await fetch('http://localhost:8000/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'demo@wildbot.com',
+                        password: 'demo123'
+                    })
+                });
+
+                if (!loginResponse.ok) {
+                    throw new Error(`Login failed: ${loginResponse.status}`);
+                }
+
+                const loginData = await loginResponse.json();
+                if (!loginData.access_token) {
+                    throw new Error('No access token received');
+                }
+                addResult('✅ Login endpoint working, token received');
+
+                // Test authenticated request
+                addResult('Testing authenticated request...');
+                const dashboardResponse = await fetch('http://localhost:8000/user/dashboard', {
+                    headers: {
+                        'Authorization': `Bearer ${loginData.access_token}`
+                    }
+                });
+
+                if (!dashboardResponse.ok) {
+                    throw new Error(`Dashboard failed: ${dashboardResponse.status}`);
+                }
+
+                const dashboardData = await dashboardResponse.json();
+                addResult(`✅ Dashboard endpoint working, user: ${dashboardData.user.email}`);
+
+                updateStatus('connection-status', 'success', 'Connected ✅');
+                addResult('🎉 ALL TESTS PASSED! Frontend and Backend are fully connected!');
+                return true;
+
+            } catch (error) {
+                updateStatus('connection-status', 'error', 'Failed ❌');
+                addResult(`Connection test failed: ${error.message}`, false);
+                return false;
+            }
+        }
+
+        async function runFullTest() {
+            // Clear previous results
+            document.getElementById('test-results').innerHTML = '';
+            
+            // Reset status
+            updateStatus('frontend-status', 'pending', 'Checking...');
+            updateStatus('backend-status', 'pending', 'Checking...');
+            updateStatus('connection-status', 'pending', 'Checking...');
+
+            addResult('🚀 Starting full connection test...');
+
+            const frontendOk = await testFrontend();
+            const backendOk = await testBackend();
+
+            if (frontendOk && backendOk) {
+                addResult('📡 Both servers running, testing API connection...');
+                await testConnection();
+            } else {
+                addResult('❌ Cannot test connection - one or both servers are not running', false);
+                updateStatus('connection-status', 'error', 'Cannot test ❌');
+            }
+        }
+
+        // Auto-run test on page load
+        window.addEventListener('load', () => {
+            setTimeout(runFullTest, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -11,6 +11,7 @@ from niche_analyzer import NicheAnalyzer
 import sqlite3
 import sys
 import os
+import aiohttp
 
 # Добавляем текущий каталог в путь поиска модулей
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
@@ -49,6 +50,12 @@ class ProductRequest(BaseModel):
 class NicheRequest(BaseModel):
     keyword: str
 
+class CategoryAnalysisRequest(BaseModel):
+    category_path: str
+    date_from: str
+    date_to: str
+    fbs: int = 0
+
 class SearchRequest(BaseModel):
     query: str
     max_results: int = 10
@@ -63,6 +70,224 @@ class TrackRequest(BaseModel):
 class RefreshRequest(BaseModel):
     user_id: int
     article_id: int
+
+# Добавляем асинхронную функцию для работы с MPStats API категорий
+async def fetch_mpstats_category_data(category_path: str, date_from: str, date_to: str, fbs: int) -> Dict:
+    """Получение данных категории из MPStats API"""
+    
+    url = "https://mpstats.io/api/wb/get/category"
+    params = {
+        "d1": date_from,
+        "d2": date_to,
+        "path": category_path,
+        "fbs": fbs
+    }
+    
+    headers = {
+        "X-Mpstats-TOKEN": "68431d2ac72ea4.96910328a56006b24a55daf65db03835d5fe5b4d",
+        "Content-Type": "application/json"
+    }
+    
+    logger.info(f"🚀 Fetching category data for {category_path}: {url} with params {params}")
+    
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, params=params, headers=headers, timeout=aiohttp.ClientTimeout(total=30)) as response:
+                logger.info(f"📊 MPStats category response: {response.status}")
+                
+                if response.status == 401:
+                    error_data = await response.json()
+                    logger.error(f"❌ MPStats API unauthorized: {error_data}")
+                    raise HTTPException(status_code=401, detail="MPStats API authorization failed. Please check your API token.")
+                
+                elif response.status == 404:
+                    logger.error(f"❌ Category not found: {category_path}")
+                    raise HTTPException(status_code=404, detail=f"Category '{category_path}' not found in MPStats.")
+                
+                elif response.status != 200:
+                    error_text = await response.text()
+                    logger.error(f"❌ MPStats API error {response.status}: {error_text}")
+                    raise HTTPException(status_code=500, detail=f"MPStats API error: {response.status}")
+                
+                data = await response.json()
+                logger.info(f"✅ Successfully fetched category data: {len(data.get('data', []))} products")
+                return data
+                
+    except aiohttp.ClientError as e:
+        logger.error(f"❌ Network error: {e}")
+        raise HTTPException(status_code=500, detail=f"Network error when connecting to MPStats API: {str(e)}")
+    except Exception as e:
+        logger.error(f"❌ Unexpected error: {e}")
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
+
+def process_category_analysis(category_path: str, date_from: str, date_to: str, products: List[Dict]) -> Dict:
+    """Обработка анализа категории"""
+    
+    import statistics
+    
+    if not products:
+        return {
+            "category_info": {
+                "name": category_path,
+                "period": f"{date_from} - {date_to}",
+                "total_products": 0,
+                "total_revenue": 0,
+                "total_sales": 0,
+                "average_price": 0,
+                "average_rating": 0,
+                "average_purchase": 0,
+                "average_turnover_days": 0
+            },
+            "top_products": [],
+            "all_products": [],
+            "category_metrics": {
+                "revenue_per_product": 0,
+                "sales_per_product": 0,
+                "products_with_sales_percentage": 0,
+                "fbs_percentage": 0,
+                "average_comments": 0,
+                "top_brands_count": 0,
+                "price_range_min": 0,
+                "price_range_max": 0
+            },
+            "aggregated_charts": {
+                "sales_graph": {"dates": [], "values": []},
+                "stocks_graph": {"dates": [], "values": []},
+                "price_graph": {"dates": [], "values": []},
+                "visibility_graph": {"dates": [], "values": []}
+            },
+            "metadata": {
+                "processing_info": {
+                    "data_source": "MPStats API",
+                    "processing_timestamp": datetime.now().isoformat(),
+                    "total_products_found": 0,
+                    "period": f"{date_from} to {date_to}",
+                }
+            }
+        }
+    
+    total_products = len(products)
+    total_revenue = sum(product.get('revenue', 0) for product in products)
+    total_sales = sum(product.get('sales', 0) for product in products)
+    
+    prices = [product.get('final_price', 0) for product in products if product.get('final_price', 0) > 0]
+    average_price = statistics.mean(prices) if prices else 0
+    
+    ratings = [product.get('rating', 0) for product in products if product.get('rating', 0) > 0]
+    average_rating = statistics.mean(ratings) if ratings else 0
+    
+    purchases = [product.get('purchase', 0) for product in products if product.get('purchase', 0) > 0]
+    average_purchase = statistics.mean(purchases) if purchases else 0
+    
+    turnover_days = [product.get('turnover_days', 0) for product in products if product.get('turnover_days', 0) > 0]
+    average_turnover_days = statistics.mean(turnover_days) if turnover_days else 0
+    
+    # Топ товары по выручке
+    sorted_products = sorted(products, key=lambda x: x.get('revenue', 0), reverse=True)
+    top_products = sorted_products[:10]
+    
+    # Метрики
+    products_with_sales = len([p for p in products if p.get('sales', 0) > 0])
+    products_with_sales_percentage = (products_with_sales / total_products) * 100
+    
+    fbs_products = len([p for p in products if p.get('fbs', False)])
+    fbs_percentage = (fbs_products / total_products) * 100
+    
+    total_comments = sum(product.get('comments', 0) for product in products)
+    average_comments = total_comments / total_products
+    
+    brands = set(product.get('brand', '') for product in products if product.get('brand'))
+    top_brands_count = len(brands)
+    
+    price_range_min = min(prices) if prices else 0
+    price_range_max = max(prices) if prices else 0
+    
+    # Агрегированные графики
+    all_dates = set()
+    for product in products:
+        if 'graph' in product and isinstance(product['graph'], dict):
+            all_dates.update(product['graph'].keys())
+    
+    sorted_dates = sorted(list(all_dates))
+    
+    sales_data = []
+    stocks_data = []
+    price_data = []
+    visibility_data = []
+    
+    for date in sorted_dates:
+        # Продажи
+        daily_sales = sum(
+            product.get('graph', {}).get(date, 0) 
+            for product in products 
+            if isinstance(product.get('graph'), dict)
+        )
+        sales_data.append(daily_sales)
+        
+        # Остатки
+        daily_stocks = sum(
+            product.get('stocks_graph', {}).get(date, 0) 
+            for product in products 
+            if isinstance(product.get('stocks_graph'), dict)
+        )
+        stocks_data.append(daily_stocks)
+        
+        # Цены (средние)
+        daily_prices = [
+            product.get('price_graph', {}).get(date, 0)
+            for product in products 
+            if isinstance(product.get('price_graph'), dict) and product.get('price_graph', {}).get(date, 0) > 0
+        ]
+        avg_price = statistics.mean(daily_prices) if daily_prices else 0
+        price_data.append(avg_price)
+        
+        # Видимость
+        daily_visibility = sum(
+            product.get('product_visibility_graph', {}).get(date, 0) 
+            for product in products 
+            if isinstance(product.get('product_visibility_graph'), dict)
+        )
+        visibility_data.append(daily_visibility)
+    
+    return {
+        "category_info": {
+            "name": category_path,
+            "period": f"{date_from} - {date_to}",
+            "total_products": total_products,
+            "total_revenue": total_revenue,
+            "total_sales": total_sales,
+            "average_price": round(average_price, 2),
+            "average_rating": round(average_rating, 2),
+            "average_purchase": round(average_purchase, 2),
+            "average_turnover_days": round(average_turnover_days, 1)
+        },
+        "top_products": top_products,
+        "all_products": products,
+        "category_metrics": {
+            "revenue_per_product": round(total_revenue / total_products, 2),
+            "sales_per_product": round(total_sales / total_products, 2),
+            "products_with_sales_percentage": round(products_with_sales_percentage, 1),
+            "fbs_percentage": round(fbs_percentage, 1),
+            "average_comments": round(average_comments, 1),
+            "top_brands_count": top_brands_count,
+            "price_range_min": price_range_min,
+            "price_range_max": price_range_max
+        },
+        "aggregated_charts": {
+            "sales_graph": {"dates": sorted_dates, "values": sales_data},
+            "stocks_graph": {"dates": sorted_dates, "values": stocks_data},
+            "price_graph": {"dates": sorted_dates, "values": price_data},
+            "visibility_graph": {"dates": sorted_dates, "values": visibility_data}
+        },
+        "metadata": {
+            "processing_info": {
+                "data_source": "MPStats API",
+                "processing_timestamp": datetime.now().isoformat(),
+                "total_products_found": len(products),
+                "period": f"{date_from} to {date_to}",
+            }
+        }
+    }
 
 # Инициализация БД для отслеживания товаров
 def init_db():
@@ -201,6 +426,41 @@ async def analyze_category(request: NicheRequest):
     except Exception as e:
         logger.error(f"Error analyzing category {request.keyword}: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/category-analysis")
+async def comprehensive_category_analysis(request: CategoryAnalysisRequest):
+    """Полноценный анализ категории с данными MPStats"""
+    try:
+        logger.info(f"🎯 Comprehensive category analysis request: {request.category_path}")
+        
+        # Получаем данные из MPStats API
+        mpstats_data = await fetch_mpstats_category_data(
+            request.category_path, 
+            request.date_from, 
+            request.date_to, 
+            request.fbs
+        )
+        
+        products = mpstats_data.get('data', [])
+        
+        if not products:
+            logger.warning(f"⚠️ No products found for category: {request.category_path}")
+            raise HTTPException(status_code=404, detail=f"No products found for category '{request.category_path}' in the specified period.")
+        
+        logger.info(f"📊 Processing {len(products)} products for category analysis")
+        
+        # Обрабатываем данные
+        result = process_category_analysis(request.category_path, request.date_from, request.date_to, products)
+        
+        logger.info(f"✅ Category analysis completed successfully for: {request.category_path}")
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error in category analysis: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 @app.post("/search")
 async def search(request: SearchRequest):

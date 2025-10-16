@@ -7,8 +7,11 @@ async def generate_ai_content(content_type: str, user_input: str, openai_api_key
     """Генерирует контент через OpenAI API"""
     try:
         # Проверяем, настроен ли API ключ
-        if openai_api_key == "sk-YOUR_KEY_HERE" or not openai_api_key:
+        logger.info(f"🔑 Received API key: {openai_api_key[:20]}...{openai_api_key[-10:] if len(openai_api_key) > 30 else 'short'}")
+        
+        if not openai_api_key or openai_api_key == "sk-YOUR_KEY_HERE":
             # Если ключ не настроен, возвращаем заглушку
+            logger.warning("⚠️ API key not configured, using fallback content")
             return generate_fallback_content(content_type, user_input)
         
         # Настраиваем клиент OpenAI

@@ -1,5 +1,3 @@
-node_modules/
-
 # Python
 __pycache__/
 *.py[cod]
@@ -22,33 +20,32 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
-
-# PyInstaller
 *.manifest
 *.spec
-
-# Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-.hypothesis/
-.pytest_cache/
-
-# Virtual environments
+.venv
 venv/
-env/
 ENV/
-env.bak/
-venv.bak/
+env/
+.env
+.venv
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+package-lock.json
+yarn.lock
+
+# React / Build
+wild-analytics-web/build/
+wild-analytics-web/node_modules/
+.DS_Store
+*.log
 
 # IDE
 .vscode/
@@ -56,6 +53,39 @@ venv.bak/
 *.swp
 *.swo
 *~
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+database.db
+*_database.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# PM2
+.pm2/
+*.pid
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+config.py
+*config.py
+
+# Conda
+yes/
+.conda/
 
 # OS
 .DS_Store
@@ -66,26 +96,20 @@ venv.bak/
 ehthumbs.db
 Thumbs.db
 
-# Logs
-*.log
-
-# Config files with secrets
-config.py
-.env
-
-# Database files
-*.db
-*.sqlite
-*.sqlite3
-
-# Charts and images
-*.png
-*.jpg
-*.jpeg
-*.gif
-
 # Temporary files
 *.tmp
 *.temp
-*~
-*.backup
+temp/
+tmp/
+
+# Certificates
+*.pem
+*.key
+*.crt
+
+# Cache
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+dist/

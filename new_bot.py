@@ -104,8 +104,11 @@ except ImportError:
     exit(1)
 
 storage = MemoryStorage()
-bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher(storage=storage)
+# Временно отключаем бот для тестирования backend API
+# bot = Bot(token=BOT_TOKEN)
+# dp = Dispatcher(storage=storage)
+bot = None
+dp = None
 
 # Инициализация анализаторов и менеджеров
 product_analyzer = ProductCardAnalyzer()

@@ -1,0 +1,75 @@
+# Инструкция: Добавить /api к существующей конфигурации Nginx для crm.samp.business
+
+# 1. Откройте конфигурацию Nginx для crm.samp.business
+sudo nano /etc/nginx/sites-available/crm-samp-business
+# (или найдите нужный файл через: ls /etc/nginx/sites-available/)
+
+# 2. Найдите блок server для HTTPS (443) и добавьте location /api ПЕРЕД location /
+# Должно выглядеть так:
+
+server {
+    listen 443 ssl http2;
+    server_name crm.samp.business;
+
+    # Ваши существующие SSL настройки (НЕ ТРОГАЙТЕ ИХ)
+    ssl_certificate /etc/letsencrypt/live/crm.samp.business/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/crm.samp.business/privkey.pem;
+    # ... остальные SSL настройки ...
+
+    # ДОБАВЬТЕ ЭТО ПЕРЕД location / :
+    location /api/ {
+        # Убираем /api из пути
+        rewrite ^/api/(.*) /$1 break;
+        
+        # Проксируем на backend (порт 8000)
+        proxy_pass http://127.0.0.1:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        
+        # Таймауты
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+        
+        # CORS
+        add_header 'Access-Control-Allow-Origin' 'https://crm.samp.business' always;
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS, PUT, DELETE, PATCH' always;
+        add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization, X-Requested-With' always;
+        add_header 'Access-Control-Allow-Credentials' 'true' always;
+        
+        # OPTIONS для CORS preflight
+        if ($request_method = 'OPTIONS') {
+            add_header 'Access-Control-Allow-Origin' 'https://crm.samp.business' always;
+            add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS, PUT, DELETE, PATCH' always;
+            add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization, X-Requested-With' always;
+            add_header 'Access-Control-Max-Age' 1728000;
+            add_header 'Content-Length' 0;
+            return 204;
+        }
+    }
+
+    # Ваша существующая конфигурация для frontend (НЕ ТРОГАЙТЕ)
+    location / {
+        # ... ваши настройки frontend ...
+    }
+}
+
+# 3. Сохраните файл (Ctrl+O, Enter, Ctrl+X)
+
+# 4. Проверьте конфигурацию
+sudo nginx -t
+
+# 5. Если проверка прошла успешно, перезапустите Nginx
+sudo systemctl restart nginx
+
+# 6. Проверьте, что API доступен
+curl -I https://crm.samp.business/api/docs
+# Должен вернуть HTTP/2 200
+
+

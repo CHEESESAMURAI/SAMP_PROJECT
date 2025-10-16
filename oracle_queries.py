@@ -58,7 +58,7 @@ class OracleQueries:
             
             # Анализируем товары в популярных категориях
             results = []
-            for category in popular_categories[:queries_count]:
+            for category in popular_categories:  # сначала собираем по всем, затем отфильтруем
                 category_data = await self._get_category_data(category, start_date, end_date)
                 if category_data and category_data.get('data'):
                     # Фильтруем по критериям
@@ -72,10 +72,21 @@ class OracleQueries:
                         analysis = self._analyze_category_products(filtered_products, category)
                         if analysis['total_revenue'] >= min_revenue:
                             results.append(analysis)
-            
+            # Сортируем по выручке и убираем повторяющиеся root категорий
+            results_sorted = sorted(results, key=lambda x: x.get('total_revenue', 0), reverse=True)
+            unique_results = []
+            used_roots: set[str] = set()
+            for item in results_sorted:
+                root = item['category'].split('/')[0] if '/' in item['category'] else item['category']
+                if root not in used_roots:
+                    unique_results.append(item)
+                    used_roots.add(root)
+                if len(unique_results) >= queries_count:
+                    break
+
             return {
-                "results": results[:queries_count],
-                "total_found": len(results),
+                "results": unique_results,
+                "total_found": len(results_sorted),
                 "period": f"{start_date} - {end_date}",
                 "criteria": f"мин. выручка: {min_revenue}₽, мин. частота: {min_frequency}"
             }
@@ -196,20 +207,47 @@ class OracleQueries:
                     if response.status == 200:
                         categories = await response.json()
                         
-                        # Поиск категории по названию
+                        # Улучшенный подбор пути категории
                         query_lower = query.lower()
-                        for category in categories:
-                            if isinstance(category, dict) and 'path' in category:
-                                if query_lower in category['path'].lower():
-                                    return category['path']
-                                    
-                        # Если точного совпадения нет, ищем частичные совпадения
-                        for category in categories:
-                            if isinstance(category, dict) and 'path' in category:
-                                path_parts = category['path'].lower().split('/')
-                                if any(query_lower in part for part in path_parts):
-                                    return category['path']
-                    
+                        candidates = []
+                        for cat in categories:
+                            if not (isinstance(cat, dict) and 'path' in cat):
+                                continue
+                            path = cat['path']
+                            path_lower = path.lower()
+                            if 'акции' in path_lower or 'ликвидац' in path_lower:
+                                continue  # пропускаем рекламные/распродажные категории
+                            score = 0
+                            if path_lower == query_lower:
+                                score = 3  # полное совпадение
+                            elif path_lower.endswith('/' + query_lower):
+                                score = 2  # соответствует последнему сегменту
+                            elif query_lower in path_lower.split('/'):
+                                score = 1  # содержит сегмент
+                            elif query_lower in path_lower:
+                                score = 0.5  # частичное
+                            if score > 0:
+                                candidates.append((score, path.count('/'), path))
+                        if candidates:
+                            # Выбираем с наибольшим score, затем с наименьшей глубиной пути
+                            candidates.sort(key=lambda x: (-x[0], x[1]))
+                            return candidates[0][2]
+
+                        # Если ничего не подошло, ищем частичные совпадения даже в promo-ветках как fallback
+                        for cat in categories:
+                            if isinstance(cat, dict) and 'path' in cat and query_lower in cat['path'].lower():
+                                return cat['path']
+            
+            # Дополнительный простой синонимический маппинг
+            synonyms = {
+                'мужская одежда': 'Мужчинам/Одежда',
+                'женская одежда': 'Женщинам/Одежда',
+                'детская одежда': 'Детям',
+            }
+            query_norm = query_lower.strip()
+            if query_norm in synonyms:
+                return synonyms[query_norm]
+
             return None
             
         except Exception as e:

@@ -1,0 +1,158 @@
+{
+    "state": 0,
+    "payloadVersion": 2,
+    "data": {
+        "products": [
+            {
+                "id": 215968815,
+                "root": 194880522,
+                "kindId": 2,
+                "brand": "Ma&Li",
+                "brandId": 738989,
+                "siteBrandId": 0,
+                "colors": [
+                    {
+                        "name": "\u0431\u0435\u043b\u044b\u0439",
+                        "id": 16777215
+                    }
+                ],
+                "subjectId": 383,
+                "subjectParentId": 1465,
+                "name": "\u0410\u0442\u043b\u0430\u0441\u043d\u044b\u0439 \u0431\u0435\u043b\u044b\u0439 \u0431\u0430\u043d\u0442\u0438\u043a-\u0437\u0430\u043a\u043e\u043b\u043a\u0430 \u0434\u043b\u044f \u0432\u043e\u043b\u043e\u0441",
+                "entity": "\u0431\u0430\u043d\u0442\u044b",
+                "matchId": 4611116,
+                "supplier": "MA&LI",
+                "supplierId": 4041600,
+                "supplierRating": 4.8,
+                "supplierFlags": 12224,
+                "pics": 13,
+                "rating": 5,
+                "reviewRating": 4.9,
+                "nmReviewRating": 4.9,
+                "feedbacks": 1939,
+                "nmFeedbacks": 1939,
+                "panelPromoId": 1008699,
+                "promoTextCard": "\u0427\u0418\u0421\u0422\u0418\u041c \u0421\u041a\u041b\u0410\u0414",
+                "promoTextCat": "\u0427\u0418\u0421\u0422\u0418\u041c \u0421\u041a\u041b\u0410\u0414",
+                "volume": 7,
+                "viewFlags": 1581072,
+                "promotions": [
+                    63484,
+                    183297,
+                    1000058,
+                    1001854,
+                    1002604,
+                    1003386,
+                    1003490,
+                    1004506,
+                    1006580,
+                    1006733,
+                    1006802,
+                    1006815,
+                    1007490,
+                    1007609,
+                    1008386,
+                    1008633,
+                    1008699,
+                    1008787,
+                    1009557,
+                    1009629,
+                    1009881
+                ],
+                "sizes": [
+                    {
+                        "name": "",
+                        "origName": "0",
+                        "rank": 0,
+                        "optionId": 344371207,
+                        "stocks": [
+                            {
+                                "wh": 301983,
+                                "dtype": 4,
+                                "dist": 1028,
+                                "qty": 126,
+                                "priority": 63659,
+                                "time1": 2,
+                                "time2": 40
+                            },
+                            {
+                                "wh": 301809,
+                                "dtype": 4,
+                                "dist": 537,
+                                "qty": 37,
+                                "priority": 76291,
+                                "time1": 2,
+                                "time2": 37
+                            },
+                            {
+                                "wh": 507,
+                                "dtype": 4,
+                                "dist": 108,
+                                "qty": 3,
+                                "priority": 91689,
+                                "time1": 3,
+                                "time2": 23
+                            },
+                            {
+                                "wh": 208277,
+                                "dtype": 4,
+                                "dist": 1511,
+                                "qty": 507,
+                                "priority": 52920,
+                                "time1": 4,
+                                "time2": 53
+                            },
+                            {
+                                "wh": 130744,
+                                "dtype": 4,
+                                "dist": 1423,
+                                "qty": 95,
+                                "priority": 53721,
+                                "time1": 3,
+                                "time2": 51
+                            },
+                            {
+                                "wh": 120762,
+                                "dtype": 4,
+                                "dist": 100,
+                                "qty": 487,
+                                "priority": 87734,
+                                "time1": 4,
+                                "time2": 26
+                            },
+                            {
+                                "wh": 301805,
+                                "dtype": 4,
+                                "dist": 1136,
+                                "qty": 198,
+                                "priority": 58909,
+                                "time1": 2,
+                                "time2": 46
+                            }
+                        ],
+                        "time1": 3,
+                        "time2": 23,
+                        "wh": 507,
+                        "dtype": 4,
+                        "dist": 108,
+                        "price": {
+                            "basic": 100100,
+                            "product": 28700,
+                            "total": 29400,
+                            "logistics": 700,
+                            "return": 0
+                        },
+                        "saleConditions": 1220542464,
+                        "payload": "yDXyLXkJJX58gR5JospIxos9BlXUE3Qz0MPhiUoeBb/S83HEPR4SUSBRyL9Xqhc4+rw4CnYSxnb6FXN1XbJm"
+                    }
+                ],
+                "totalQuantity": 1453,
+                "time1": 3,
+                "time2": 23,
+                "wh": 507,
+                "dtype": 4,
+                "dist": 108
+            }
+        ]
+    }
+}

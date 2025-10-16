@@ -20,49 +20,55 @@ def get_mpstats_headers():
         "Referer": "https://mpstats.io/"
     }
 
-async def mpstats_api_request(url, params=None, timeout=30):
-    """
-    Универсальная функция для запросов к MPSTATS API
-    
+async def mpstats_api_request(url, params=None, timeout=30, max_retries: int = 3, backoff_base: float = 1.0):
+    """ Универсальная функция запросов к MPSTATS API с экспоненциальным повтором.
     Args:
         url: URL для запроса
-        params: Параметры запроса
-        timeout: Таймаут запроса в секундах
-    
+        params: query-параметры
+        timeout: таймаут одной попытки
+        max_retries: сколько всего попыток сделать (включая первую)
+        backoff_base: базовый интервал (сек) для экспоненциальной задержки
     Returns:
-        dict: JSON ответ или None в случае ошибки
+        dict | None – JSON ответа либо None при окончательной неудаче
     """
     headers = get_mpstats_headers()
-    
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                url, 
-                headers=headers, 
-                params=params,
-                timeout=aiohttp.ClientTimeout(total=timeout)
-            ) as response:
-                if response.status == 200:
-                    try:
-                        data = await response.json()
-                        logger.info(f"✅ MPSTATS API успешно: {url}")
-                        return data
-                    except Exception as e:
-                        logger.error(f"❌ Ошибка парсинга JSON от MPSTATS: {e}")
-                        text = await response.text()
-                        logger.error(f"Ответ сервера: {text[:500]}...")
-                        return None
-                else:
-                    text = await response.text()
-                    logger.error(f"❌ MPSTATS API ошибка {response.status}: {text}")
-                    return None
-                    
-    except asyncio.TimeoutError:
-        logger.error(f"❌ Таймаут запроса к MPSTATS: {url}")
-        return None
-    except Exception as e:
-        logger.error(f"❌ Ошибка запроса к MPSTATS: {e}")
-        return None
+
+    attempt = 0
+    while attempt < max_retries:
+        attempt += 1
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    url,
+                    headers=headers,
+                    params=params,
+                    timeout=aiohttp.ClientTimeout(total=timeout),
+                ) as response:
+                    if response.status == 200:
+                        try:
+                            data = await response.json()
+                            logger.info(f"✅ MPSTATS API успешно (attempt {attempt}): {url}")
+                            return data
+                        except Exception as e:
+                            logger.warning(
+                                f"⚠️  Ошибка JSON от MPSTATS (attempt {attempt}): {e}")
+                    else:
+                        # 4xx/5xx – логируем warning, не error, чтобы не спамить
+                        text_preview = (await response.text())[:200]
+                        logger.warning(
+                            f"MPSTATS API {response.status} (attempt {attempt}): {text_preview}")
+        except asyncio.TimeoutError:
+            logger.warning(f"⏱️  Таймаут MPSTATS (attempt {attempt}): {url}")
+        except Exception as e:
+            logger.warning(f"⚠️  Ошибка запроса к MPSTATS (attempt {attempt}): {e}")
+
+        # Если это была не последняя попытка – ждём экспоненциальную паузу
+        if attempt < max_retries:
+            sleep_seconds = backoff_base * 2 ** (attempt - 1)
+            await asyncio.sleep(sleep_seconds)
+
+    logger.error(f"❌ MPSTATS API неудача после {max_retries} попыток: {url}")
+    return None
 
 async def get_category_data_browser(category_path, start_date, end_date):
     """

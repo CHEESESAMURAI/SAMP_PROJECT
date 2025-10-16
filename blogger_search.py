@@ -11,6 +11,7 @@ from urllib.parse import quote_plus
 import matplotlib.pyplot as plt
 from datetime import datetime
 import os
+from statistics import mean
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +23,7 @@ except ImportError:
     SERPER_API_KEY = "your_serper_api_key_here"
 
 async def search_bloggers_by_query(query: str, platforms: List[str] = None) -> Dict[str, Any]:
-    """Основная функция поиска блогеров по запросу"""
+    """Основная функция поиска блогеров по запросу с расчётом ER/CPM."""
     if platforms is None:
         platforms = ["YouTube", "Instagram", "TikTok", "Telegram"]
     
@@ -63,10 +64,29 @@ async def search_bloggers_by_query(query: str, platforms: List[str] = None) -> D
                 results["platforms"][platform_name] = platform_result
                 results["total_found"] += len(platform_result.get("bloggers", []))
         
-        # Создаем топ блогеров
+        # === Дополнительные метрики и сортировка ===
+        for platform_name, pdata in results["platforms"].items():
+            bloggers = pdata.get("bloggers", [])
+            for bl in bloggers:
+                likes = bl.get("likes", 0)
+                views = bl.get("views", 0)
+                # ER (%): likes / views *100
+                bl["er"] = round(likes / views * 100, 2) if views and likes else 0
+                # Оценочный бюджет -> число (середина диапазона)
+                budget_raw = bl.get("estimated_budget", "0")
+                bl["budget_estimate"] = _parse_budget(budget_raw)
+                # CPM руб/1000 просмотров
+                bl["cpm"] = round(bl["budget_estimate"] / views * 1000, 2) if views else 0
+
+            # Сортируем: сначала ER, затем самый низкий CPM, затем просмотры
+            bloggers.sort(key=lambda x: (-x.get("er", 0), x.get("cpm", 1e9), -x.get("views", 0)))
+            # Сохраняем топ-5 каждого
+            pdata["top_bloggers"] = bloggers[:5]
+
+        # Общий топ 10 по тому же принципу
         results["top_bloggers"] = get_top_bloggers(results["platforms"])
-        
-        # Создаем сводку
+
+        # Обновляем сводку
         results["summary"] = create_summary(results["platforms"])
         
         logger.info(f"Найдено {results['total_found']} блогеров")
@@ -778,3 +798,14 @@ def format_blogger_search_results(results: Dict) -> str:
     text += f"\n💡 *Совет:* Обратите внимание на блогеров с отметкой ✅ - у них уже есть контент о Wildberries!"
     
     return text
+
+def _parse_budget(budget_str: str) -> int:
+    """Преобразует строку '5-10K ₽' или 'от 20 000 ₽' в среднее значение (int)."""
+    try:
+        digits = re.findall(r"\d+[\s\d]*", budget_str.replace(" ", " "))  # заменяем узкие пробелы
+        nums = [int(d.replace(" ", "")) for d in digits]
+        if not nums:
+            return 0
+        return int(mean(nums)) if len(nums) > 1 else nums[0]
+    except Exception:
+        return 0

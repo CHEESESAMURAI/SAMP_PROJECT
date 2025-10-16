@@ -1,0 +1,20 @@
+[Unit]
+Description=Wild Analytics Dashboard
+After=network.target
+
+[Service]
+Type=forking
+User=root
+WorkingDirectory=/root/WILD-BOT 9
+ExecStart=/root/WILD-BOT 9/start_server.sh
+ExecStop=/root/WILD-BOT 9/stop_server.sh
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+
+
+
+
+
