@@ -107,6 +107,12 @@ tmp/
 *.key
 *.crt
 
+# Archives
+*.tar.gz
+*.zip
+*.7z
+*.rar
+
 # Cache
 .cache/
 .parcel-cache/
