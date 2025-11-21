@@ -1,5 +1,7 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Bar, Pie } from 'react-chartjs-2';
+import { addYandexMetrika } from '../utils/yandexMetrika';
+import { buildApiUrl } from '../utils/api';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -97,6 +99,12 @@ interface BloggerSearchData {
 }
 
 const BloggerSearch: React.FC = () => {
+  // Добавляем Yandex.Metrika счетчик
+  useEffect(() => {
+    addYandexMetrika('104758560');
+  }, []);
+
+
   const [keyword, setKeyword] = useState('');
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(['youtube', 'instagram', 'tiktok', 'telegram']);
   const [minFollowers, setMinFollowers] = useState<number | null>(null);
@@ -142,7 +150,7 @@ const BloggerSearch: React.FC = () => {
     setData(null);
 
     try {
-      const response = await fetch('http://localhost:8000/bloggers/search', {
+      const response = await fetch(buildApiUrl('bloggers/search'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -281,7 +289,7 @@ const BloggerSearch: React.FC = () => {
     if (!data) return;
     
     try {
-      const response = await fetch('http://localhost:8000/bloggers/export', {
+      const response = await fetch(buildApiUrl('bloggers/export'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

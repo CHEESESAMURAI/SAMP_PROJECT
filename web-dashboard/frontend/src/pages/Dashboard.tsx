@@ -35,7 +35,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="container">
-      <h1>Дашборд Wild Analytics</h1>
+      <h1>Дашборд SAMP Analytics</h1>
       
       <div className="grid grid-cols-2" style={{ marginTop: '20px' }}>
         <div className="card">

@@ -3,6 +3,7 @@ from typing import Optional
 import httpx
 import logging
 from datetime import datetime, timedelta
+import os
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -12,14 +13,21 @@ router = APIRouter(prefix="/item", tags=["MPStats Item Analysis"])
 
 # MPStats API конфигурация
 MPSTATS_BASE_URL = "https://mpstats.io/api/wb/get"
-MPSTATS_TOKEN = "5f356bf2a55695.18670170077856385aaba91fb0b6b76bb7533b52"  # Правильный токен из документации
+try:
+    from config import MPSTATS_API_KEY  # type: ignore
+except ImportError:
+    MPSTATS_API_KEY = os.getenv("MPSTATS_API_KEY", "")
 
 async def make_mpstats_request(endpoint: str, params: dict = None) -> dict:
     """Выполняет запрос к MPStats API"""
     try:
+        if not MPSTATS_API_KEY:
+            logger.error("MPStats API key not configured")
+            return []
+
         url = f"{MPSTATS_BASE_URL}/{endpoint}"
         headers = {
-            "X-Mpstats-TOKEN": MPSTATS_TOKEN,
+            "X-Mpstats-TOKEN": MPSTATS_API_KEY,
             "Content-Type": "application/json"
         }
         
@@ -212,6 +220,38 @@ async def get_item_identical(
         
     except Exception as e:
         logger.error(f"Error getting identical items: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/{article}/comments")
+async def get_item_comments(
+    article: str,
+    limit: int = Query(200, ge=1, le=500, description="Максимальное количество отзывов (1-500)"),
+    page: int = Query(1, ge=1, description="Номер страницы отзывов (начиная с 1)")
+):
+    """
+    Получает историю отзывов товара с MPStats.
+    По умолчанию возвращает до 200 последних отзывов.
+    """
+    try:
+        params = {
+            "limit": limit,
+            "page": page
+        }
+
+        endpoint = f"item/{article}/comments"
+        data = await make_mpstats_request(endpoint, params)
+
+        if isinstance(data, dict):
+            return data
+
+        # Приводим к ожидаемой структуре при нестандартном ответе
+        return {
+            "last_request": None,
+            "comments": data if isinstance(data, list) else []
+        }
+    except Exception as e:
+        logger.error(f"Error getting item comments: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/{article}/balance_by_day")

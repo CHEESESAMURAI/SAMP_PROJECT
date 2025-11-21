@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
+import { addYandexMetrika } from '../utils/yandexMetrika';
+import { buildApiUrl } from '../utils/api';
 interface OracleMainResult {
   query: string;
   query_rank: number;
@@ -51,6 +53,12 @@ interface OracleApiResponse {
 }
 
 const OracleQueriesEnhanced: React.FC = () => {
+  // Добавляем Yandex.Metrika счетчик
+  useEffect(() => {
+    addYandexMetrika('104757311');
+  }, []);
+
+
   // State для параметров фильтрации
   const [queriesCount, setQueriesCount] = useState(3);
   const [month, setMonth] = useState<string>(new Date().toISOString().slice(0, 7));
@@ -84,7 +92,7 @@ const OracleQueriesEnhanced: React.FC = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/analysis/oracle-enhanced', {
+      const response = await fetch(buildApiUrl('analysis/oracle-enhanced'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -121,7 +129,7 @@ const OracleQueriesEnhanced: React.FC = () => {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:8000/analysis/oracle-export?format_type=${format}`, {
+      const response = await fetch(buildApiUrl(`analysis/oracle-export?format_type=${format}`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

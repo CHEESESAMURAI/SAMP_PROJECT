@@ -1,5 +1,6 @@
 import logging
 import statistics
+import json
 from datetime import datetime, timedelta
 from typing import List, Dict, Any
 from fastapi import APIRouter, HTTPException
@@ -71,6 +72,14 @@ class CategoryInfo(BaseModel):
     average_rating: float
     average_purchase: float
     average_turnover_days: float
+    # Новые поля
+    total_suppliers: int = 0
+    total_brands: int = 0
+    total_articles: int = 0
+    monopoly_index: float = 0.0  # Индекс монопольности (0-1, где 1 = полная монополия)
+    avg_daily_suppliers_with_orders: float = 0.0
+    brands_with_sales: int = 0
+    articles_with_sales: int = 0
 
 class CategoryMetrics(BaseModel):
     revenue_per_product: float
@@ -107,36 +116,250 @@ class CategoryAnalysisResponse(BaseModel):
 
 # === Функции обработки данных ===
 
+def normalize_category_path(category_path: str) -> List[str]:
+    """Нормализует путь категории и возвращает список возможных вариантов"""
+    variants = []
+    
+    # Оригинальный путь
+    original = category_path.strip()
+    variants.append(original)
+    
+    # Убираем пробелы вокруг слэшей
+    normalized = original.replace(' / ', '/').replace('/ ', '/').replace(' /', '/')
+    if normalized != original:
+        variants.append(normalized)
+    
+    # Заменяем слэши на пробелы со слэшами (если их нет)
+    if '/' in normalized and ' / ' not in normalized:
+        spaced = normalized.replace('/', ' / ')
+        if spaced not in variants:
+            variants.append(spaced)
+    
+    # Убираем двойные пробелы
+    no_double_spaces = ' '.join(normalized.split())
+    if no_double_spaces not in variants:
+        variants.append(no_double_spaces)
+    
+    # Убираем пробелы в начале и конце каждого сегмента
+    segments = normalized.split('/')
+    cleaned_segments = [seg.strip() for seg in segments]
+    cleaned_path = '/'.join(cleaned_segments)
+    if cleaned_path not in variants:
+        variants.append(cleaned_path)
+    
+    # Пробуем с маленькой буквы первого слова
+    if cleaned_path:
+        first_char_lower = cleaned_path[0].lower() + cleaned_path[1:] if len(cleaned_path) > 1 else cleaned_path.lower()
+        if first_char_lower not in variants:
+            variants.append(first_char_lower)
+    
+    # Пробуем вариант с заглавной буквой первого слова каждого сегмента
+    title_segments = [seg.capitalize() if seg else seg for seg in cleaned_segments]
+    title_path = '/'.join(title_segments)
+    if title_path not in variants:
+        variants.append(title_path)
+    
+    # Убираем дубликаты, сохраняя порядок
+    seen = set()
+    unique_variants = []
+    for variant in variants:
+        if variant and variant not in seen:
+            seen.add(variant)
+            unique_variants.append(variant)
+    
+    return unique_variants
+
 async def fetch_mpstats_category_data(category_path: str, date_from: str, date_to: str, fbs: int) -> Dict[str, Any]:
-    """Получение данных категории из MPStats API"""
+    """Получение данных категории из MPStats API с пагинацией для получения всех товаров"""
     
     url = "https://mpstats.io/api/wb/get/category"
     headers = {
-        'X-Mpstats-TOKEN': '68431d2ac72ea4.96910328a56006b24a55daf65db03835d5fe5b4d',
+        'X-Mpstats-TOKEN': '691224ca5c1122.7009638641fe116d63a053fa882deefbd618dcb3',
         'Content-Type': 'application/json'
     }
-    params = {
-        'd1': date_from,
-        'd2': date_to,
-        'path': category_path,
-        'fbs': fbs
-    }
     
-    logger.info(f"🚀 Starting category analysis for: {category_path}")
-    logger.info(f"🚀 Fetching category data for {category_path}: {url} with params {params}")
+    # Пробуем разные варианты пути категории
+    path_variants = normalize_category_path(category_path)
+    logger.info(f"🔍 Trying category path variants: {path_variants}")
     
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url, headers=headers, params=params) as response:
-            logger.info(f"📊 MPStats API category response: {response.status}")
+    last_error = None
+    for path_variant in path_variants:
+        params = {
+            'd1': date_from,
+            'd2': date_to,
+            'path': path_variant,
+            'fbs': fbs
+        }
+        
+        logger.info(f"🚀 Trying category path: {path_variant}")
+        
+        all_products = []
+        start_row = 0
+        batch_size = 5000  # Максимальный размер батча согласно API
+        total_expected = None
+        
+        try:
+            async with aiohttp.ClientSession() as session:
+                # Сначала пробуем GET запрос (как в тестовом файле)
+                try:
+                    async with session.get(url, headers=headers, params=params, timeout=aiohttp.ClientTimeout(total=30)) as get_response:
+                        if get_response.status == 200:
+                            get_data = await get_response.json()
+                            logger.info(f"📦 GET response: {json.dumps(get_data, ensure_ascii=False)[:300]}")
+                            
+                            # Проверяем структуру GET ответа
+                            if isinstance(get_data, list):
+                                all_products = get_data
+                                total_expected = len(all_products)
+                                logger.info(f"✅ GET request successful: {len(all_products)} products")
+                                if len(all_products) > 0:
+                                    return {
+                                        'data': all_products,
+                                        'total': len(all_products),
+                                        'used_path': path_variant
+                                    }
+                            elif isinstance(get_data, dict):
+                                get_products = get_data.get('data', get_data.get('items', []))
+                                if get_products:
+                                    all_products = get_products
+                                    total_expected = len(all_products)
+                                    logger.info(f"✅ GET request successful: {len(all_products)} products")
+                                    if len(all_products) > 0:
+                                        return {
+                                            'data': all_products,
+                                            'total': len(all_products),
+                                            'used_path': path_variant
+                                        }
+                except Exception as get_err:
+                    logger.info(f"ℹ️ GET request failed, trying POST: {str(get_err)}")
+                
+                # Если GET не сработал, пробуем POST с пагинацией
+                while True:
+                    json_data = {
+                        'startRow': start_row,
+                        'endRow': start_row + batch_size,
+                        'filterModel': {},
+                        'sortModel': []
+                    }
+                    
+                    async with session.post(url, headers=headers, params=params, json=json_data, timeout=aiohttp.ClientTimeout(total=30)) as response:
+                        logger.info(f"📊 MPStats API category response: {response.status} (batch: {start_row}-{start_row + batch_size}, path: {path_variant})")
+                        
+                        if response.status == 200:
+                            data = await response.json()
+                            
+                            # Логируем полную структуру ответа для отладки
+                            logger.info(f"📦 Full response structure: {json.dumps(data, ensure_ascii=False)[:500] if isinstance(data, dict) else str(data)[:500]}")
+                            
+                            # Проверяем разные возможные структуры ответа
+                            if isinstance(data, list):
+                                # Если ответ - это массив напрямую
+                                products = data
+                                total_expected = len(products)
+                                logger.info(f"📦 Response is a list with {len(products)} items")
+                            elif isinstance(data, dict):
+                                # Стандартная структура с полями data и total
+                                products = data.get('data', [])
+                                total_expected = data.get('total', len(products))
+                                
+                                # Проверяем альтернативные поля
+                                if not products and 'items' in data:
+                                    products = data.get('items', [])
+                                    logger.info(f"📦 Using 'items' field instead of 'data'")
+                                if total_expected == 0 and 'count' in data:
+                                    total_expected = data.get('count', 0)
+                                    logger.info(f"📦 Using 'count' field instead of 'total'")
+                                
+                                logger.info(f"📦 Response data structure: total={total_expected}, products_count={len(products)}, keys={list(data.keys())}")
+                            else:
+                                logger.warning(f"⚠️ Unexpected response type: {type(data)}")
+                                products = []
+                                total_expected = 0
+                            
+                            if products:
+                                all_products.extend(products)
+                                logger.info(f"✅ Fetched {len(products)} products (total so far: {len(all_products)}/{total_expected})")
+                            
+                            # Если получили все товары или нет больше данных
+                            if len(all_products) >= total_expected or len(products) == 0:
+                                break
+                            
+                            start_row += batch_size
+                        else:
+                            error_text = await response.text()
+                            logger.warning(f"⚠️ Error fetching category data: {response.status} - {error_text[:200]}")
+                            if len(all_products) > 0:
+                                # Если уже получили часть данных, возвращаем их
+                                logger.warning(f"⚠️ Partial data received: {len(all_products)} products")
+                                break
+                            raise Exception(f"HTTP {response.status}: {error_text[:200]}")
             
-            if response.status == 200:
-                data = await response.json()
-                logger.info(f"✅ Successfully fetched category data: {len(data.get('data', []))} products")
-                return data
+            # Если получили хотя бы один продукт, возвращаем результат
+            if len(all_products) > 0:
+                logger.info(f"✅ Successfully fetched category data with path '{path_variant}': {len(all_products)} products")
+                return {
+                    'data': all_products,
+                    'total': len(all_products),
+                    'used_path': path_variant
+                }
             else:
-                error_text = await response.text()
-                logger.error(f"❌ Error fetching category data: {response.status} - {error_text}")
-                raise HTTPException(status_code=response.status, detail=f"Failed to fetch category data: {error_text}")
+                logger.warning(f"⚠️ No products found for path variant: {path_variant} (total_expected={total_expected})")
+                
+                # Пробуем альтернативный endpoint /category/items
+                try:
+                    items_url = "https://mpstats.io/api/wb/get/category/items"
+                    items_params = {
+                        'path': path_variant,
+                        'd1': date_from,
+                        'd2': date_to,
+                        'fbs': fbs,
+                        'limit': 10000  # Максимальный лимит
+                    }
+                    
+                    async with aiohttp.ClientSession() as items_session:
+                        async with items_session.get(items_url, headers=headers, params=items_params, timeout=aiohttp.ClientTimeout(total=30)) as items_response:
+                            if items_response.status == 200:
+                                items_data = await items_response.json()
+                                logger.info(f"📦 Items endpoint response: {json.dumps(items_data, ensure_ascii=False)[:300]}")
+                                
+                                if isinstance(items_data, list) and len(items_data) > 0:
+                                    logger.info(f"✅ Items endpoint successful: {len(items_data)} products")
+                                    return {
+                                        'data': items_data,
+                                        'total': len(items_data),
+                                        'used_path': path_variant
+                                    }
+                                elif isinstance(items_data, dict):
+                                    items_list = items_data.get('data', items_data.get('items', []))
+                                    if isinstance(items_list, list) and len(items_list) > 0:
+                                        logger.info(f"✅ Items endpoint successful: {len(items_list)} products")
+                                        return {
+                                            'data': items_list,
+                                            'total': len(items_list),
+                                            'used_path': path_variant
+                                        }
+                except Exception as items_err:
+                    logger.info(f"ℹ️ Items endpoint failed: {str(items_err)}")
+                
+                # Проверяем, может быть API вернул пустой массив, но это валидный ответ
+                if total_expected == 0:
+                    last_error = f"API вернул 0 товаров для пути '{path_variant}' - категория пуста в указанный период"
+                else:
+                    last_error = f"No products found for path '{path_variant}'"
+                continue
+                
+        except Exception as e:
+            logger.warning(f"⚠️ Failed to fetch data for path '{path_variant}': {str(e)}")
+            last_error = str(e)
+            continue
+    
+    # Если ни один вариант не сработал
+    logger.error(f"❌ All path variants failed. Last error: {last_error}")
+    return {
+        'data': [],
+        'total': 0,
+        'error': f"Не удалось найти данные для категории '{category_path}'. Попробованы варианты: {', '.join(path_variants)}. {last_error or 'Категория может быть пустой в указанный период или путь указан неверно.'}"
+    }
 
 def generate_dates_for_period(date_from: str, date_to: str, data_length: int = 30) -> List[str]:
     """Генерирует список дат для указанного периода"""
@@ -161,7 +384,8 @@ def generate_dates_for_period(date_from: str, date_to: str, data_length: int = 3
         today = datetime.now()
         return [(today - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(29, -1, -1)]
 
-def process_category_info(category_path: str, date_from: str, date_to: str, products: List[Dict]) -> CategoryInfo:
+def process_category_info(category_path: str, date_from: str, date_to: str, products: List[Dict], 
+                         additional_data: Dict[str, Any] = None) -> CategoryInfo:
     """Обработка общей информации о категории"""
     
     total_products = len(products)
@@ -180,6 +404,100 @@ def process_category_info(category_path: str, date_from: str, date_to: str, prod
     turnover_days = [product.get('turnover_days', 0) for product in products if product.get('turnover_days', 0) > 0]
     average_turnover_days = statistics.mean(turnover_days) if turnover_days else 0
     
+    # Вычисляем новые метрики из данных продуктов
+    unique_suppliers = set()
+    unique_brands = set()
+    unique_articles = set()
+    articles_with_sales_set = set()
+    brands_with_sales_set = set()
+    suppliers_with_sales_set = set()
+    
+    for product in products:
+        supplier_id = product.get('supplier_id')
+        if supplier_id:
+            unique_suppliers.add(supplier_id)
+            if product.get('sales', 0) > 0:
+                suppliers_with_sales_set.add(supplier_id)
+        
+        brand = product.get('brand')
+        if brand:
+            unique_brands.add(brand)
+            if product.get('sales', 0) > 0:
+                brands_with_sales_set.add(brand)
+        
+        article_id = product.get('id')
+        if article_id:
+            unique_articles.add(article_id)
+            if product.get('sales', 0) > 0:
+                articles_with_sales_set.add(article_id)
+    
+    total_suppliers = len(unique_suppliers)
+    total_brands = len(unique_brands)
+    total_articles = len(unique_articles)
+    brands_with_sales = len(brands_with_sales_set)
+    articles_with_sales = len(articles_with_sales_set)
+    
+    # Вычисляем индекс монопольности (доля выручки топ-1 продавца)
+    supplier_revenue = {}
+    for product in products:
+        supplier_id = product.get('supplier_id')
+        if supplier_id:
+            supplier_revenue[supplier_id] = supplier_revenue.get(supplier_id, 0) + product.get('revenue', 0)
+    
+    monopoly_index = 0.0
+    if supplier_revenue and total_revenue > 0:
+        max_supplier_revenue = max(supplier_revenue.values())
+        monopoly_index = round(max_supplier_revenue / total_revenue, 3)
+    
+    # Среднесуточное количество поставщиков с заказами
+    # Используем данные из additional_data если доступны, иначе вычисляем из продуктов
+    avg_daily_suppliers_with_orders = 0.0
+    if additional_data and 'by_date' in additional_data:
+        # Вычисляем среднее из данных по дням
+        daily_suppliers = [day.get('sellers_with_sells', 0) for day in additional_data['by_date'] if isinstance(day, dict)]
+        if daily_suppliers:
+            avg_daily_suppliers_with_orders = round(statistics.mean(daily_suppliers), 1)
+    else:
+        # Вычисляем приблизительно: количество поставщиков с продажами / количество дней
+        try:
+            start_date = datetime.fromisoformat(date_from)
+            end_date = datetime.fromisoformat(date_to)
+            days_count = (end_date - start_date).days + 1
+            if days_count > 0:
+                avg_daily_suppliers_with_orders = round(len(suppliers_with_sales_set) / days_count, 1)
+        except:
+            avg_daily_suppliers_with_orders = round(len(suppliers_with_sales_set), 1)
+    
+    # Если есть данные из дополнительных эндпоинтов, используем их
+    if additional_data:
+        if 'subcategories' in additional_data and isinstance(additional_data['subcategories'], list) and len(additional_data['subcategories']) > 0:
+            # Берем данные из первой подкатегории (текущая категория)
+            subcat_data = additional_data['subcategories'][0]
+            total_suppliers = subcat_data.get('sellers', total_suppliers)
+            total_brands = subcat_data.get('brands', total_brands)
+            total_articles = subcat_data.get('items', total_articles)
+            brands_with_sales = subcat_data.get('brands_with_sells', brands_with_sales)
+            articles_with_sales = subcat_data.get('items_with_sells', articles_with_sales)
+            if 'sellers_with_sells' in subcat_data:
+                sellers_with_sells_count = subcat_data.get('sellers_with_sells', 0)
+                try:
+                    start_date = datetime.fromisoformat(date_from)
+                    end_date = datetime.fromisoformat(date_to)
+                    days_count = (end_date - start_date).days + 1
+                    if days_count > 0:
+                        avg_daily_suppliers_with_orders = round(sellers_with_sells_count / days_count, 1)
+                except:
+                    avg_daily_suppliers_with_orders = round(sellers_with_sells_count, 1)
+        
+        if 'items' in additional_data and isinstance(additional_data['items'], list) and len(additional_data['items']) > 0:
+            # Берем данные из первого предмета (текущая категория)
+            items_data = additional_data['items'][0]
+            total_articles = items_data.get('items', total_articles)
+            articles_with_sales = items_data.get('items_with_sells', articles_with_sales)
+            total_brands = items_data.get('brands', total_brands)
+            brands_with_sales = items_data.get('brands_with_sells', brands_with_sales)
+            total_suppliers = items_data.get('sellers', total_suppliers)
+    
     return CategoryInfo(
         name=category_path,
         period=f"{date_from} - {date_to}",
@@ -189,7 +507,14 @@ def process_category_info(category_path: str, date_from: str, date_to: str, prod
         average_price=round(average_price, 2),
         average_rating=round(average_rating, 2),
         average_purchase=round(average_purchase, 2),
-        average_turnover_days=round(average_turnover_days, 1)
+        average_turnover_days=round(average_turnover_days, 1),
+        total_suppliers=total_suppliers,
+        total_brands=total_brands,
+        total_articles=total_articles,
+        monopoly_index=monopoly_index,
+        avg_daily_suppliers_with_orders=avg_daily_suppliers_with_orders,
+        brands_with_sales=brands_with_sales,
+        articles_with_sales=articles_with_sales
     )
 
 def process_top_products(products: List[Dict], limit: int = 10) -> List[ProductDetail]:
@@ -605,15 +930,64 @@ async def analyze_category(request: CategoryAnalysisRequest):
         )
         
         products = external_data.get('data', [])
+        error_message = external_data.get('error')
+        used_path = external_data.get('used_path', request.category_path)  # Используем успешный путь или оригинальный
         
         if not products:
             logger.warning(f"⚠️ No products found for category: {request.category_path}")
-            raise HTTPException(status_code=404, detail=f"No products found for category '{request.category_path}' in the specified period.")
+            detail_message = error_message or f"No products found for category '{request.category_path}' in the specified period."
+            raise HTTPException(status_code=404, detail=detail_message)
         
-        logger.info(f"📊 Processing {len(products)} products for category analysis")
+        logger.info(f"📊 Processing {len(products)} products for category analysis (used path: {used_path})")
+        
+        # Получаем дополнительные данные из MPStats API
+        additional_data = {}
+        try:
+            # Получаем данные из дополнительных эндпоинтов параллельно
+            async with aiohttp.ClientSession() as session:
+                headers = {
+                    'X-Mpstats-TOKEN': '691224ca5c1122.7009638641fe116d63a053fa882deefbd618dcb3',
+                    'Content-Type': 'application/json'
+                }
+                params = {
+                    'd1': request.date_from,
+                    'd2': request.date_to,
+                    'path': used_path,  # Используем успешный путь
+                    'fbs': request.fbs
+                }
+                
+                # Запросы к дополнительным эндпоинтам
+                tasks = []
+                endpoints = {
+                    'subcategories': 'category/subcategories',
+                    'items': 'category/items',
+                    'by_date': 'category/by_date'
+                }
+                
+                for key, endpoint in endpoints.items():
+                    url = f"https://mpstats.io/api/wb/get/{endpoint}"
+                    if key == 'by_date':
+                        params_with_group = {**params, 'groupBy': 'day'}
+                        task = session.get(url, headers=headers, params=params_with_group)
+                    else:
+                        task = session.get(url, headers=headers, params=params)
+                    tasks.append((key, task))
+                
+                # Выполняем запросы
+                for key, task in tasks:
+                    try:
+                        async with task as response:
+                            if response.status == 200:
+                                data = await response.json()
+                                additional_data[key] = data
+                                logger.info(f"✅ Fetched {key} data: {len(data) if isinstance(data, list) else 'object'}")
+                    except Exception as e:
+                        logger.warning(f"⚠️ Failed to fetch {key} data: {e}")
+        except Exception as e:
+            logger.warning(f"⚠️ Failed to fetch additional data: {e}")
         
         # Обрабатываем данные
-        category_info = process_category_info(request.category_path, request.date_from, request.date_to, products)
+        category_info = process_category_info(request.category_path, request.date_from, request.date_to, products, additional_data)
         top_products = process_top_products(products, 10)
         all_products = process_all_products(products)
         category_metrics = process_category_metrics(products)
@@ -625,7 +999,7 @@ async def analyze_category(request: CategoryAnalysisRequest):
         # Метаданные
         metadata = {
             "processing_info": {
-                "data_source": "Wild Analytics Intelligence",
+                "data_source": "SAMP Analytics Intelligence",
                 "processing_timestamp": datetime.now().isoformat(),
                 "total_products_found": len(products),
                 "period": f"{request.date_from} to {request.date_to}",

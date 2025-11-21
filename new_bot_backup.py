@@ -97,7 +97,7 @@ ADMIN_ID = 1659228199  # Замените на ваш ID в Telegram
 # Ключ для serper.dev API
 SERPER_API_KEY = "8ba851ed7ae1e6a655102bea15d73fdb39cdac79"
 # Обновляем API ключ
-MPSTATS_API_KEY = "68431d2ac72ea4.96910328a56006b24a55daf65db03835d5fe5b4d"  # Новый ключ MPSTATS API
+MPSTATS_API_KEY = "691224ca5c1122.7009638641fe116d63a053fa882deefbd618dcb3"  # Новый ключ MPSTATS API
 
 storage = MemoryStorage()
 bot = Bot(token=BOT_TOKEN)
@@ -1574,7 +1574,7 @@ ADMIN_ID = 1659228199  # Замените на ваш ID в Telegram
 # Ключ для serper.dev API
 SERPER_API_KEY = "8ba851ed7ae1e6a655102bea15d73fdb39cdac79"
 # Обновляем API ключ
-MPSTATS_API_KEY = "68431d2ac72ea4.96910328a56006b24a55daf65db03835d5fe5b4d"  # Новый ключ MPSTATS API
+MPSTATS_API_KEY = "691224ca5c1122.7009638641fe116d63a053fa882deefbd618dcb3"  # Новый ключ MPSTATS API
 
 storage = MemoryStorage()
 bot = Bot(token=BOT_TOKEN)

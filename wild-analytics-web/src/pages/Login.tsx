@@ -1,7 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { addYandexMetrika } from '../utils/yandexMetrika';
 import './Auth.css';
+
+// Добавляем типизацию для window.ym
+declare global {
+  interface Window {
+    ym?: (counterId: number, method: string, ...args: any[]) => void;
+  }
+}
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('demo@wildbot.com');
@@ -9,6 +17,24 @@ const Login: React.FC = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { user, login } = useAuth();
+
+  // Добавляем Yandex.Metrika счетчик для страницы авторизации
+  useEffect(() => {
+    console.log('🚀 Login page mounted, adding Yandex.Metrika...');
+    addYandexMetrika('104757300');
+    
+    // Проверяем через 2 секунды, что счетчик работает
+    setTimeout(() => {
+      if (window.ym) {
+        console.log('✅ Yandex.Metrika is available');
+        // Отправляем тестовое событие
+        window.ym(104757300, 'reachGoal', 'login_page_viewed');
+        console.log('📊 Test event sent to Yandex.Metrika');
+      } else {
+        console.log('❌ Yandex.Metrika is not available');
+      }
+    }, 2000);
+  }, []);
 
   // Если пользователь уже авторизован, перенаправляем на главную
   if (user) {
@@ -33,7 +59,7 @@ const Login: React.FC = () => {
     <div className="auth-container">
       <div className="auth-card">
         <div className="auth-header">
-          <h1>🐺 Wild Analytics</h1>
+          <h1>🐺 SAMP Analytics</h1>
           <p>Войти в систему</p>
         </div>
         

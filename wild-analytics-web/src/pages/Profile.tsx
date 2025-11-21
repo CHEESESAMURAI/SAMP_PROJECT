@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
+import { addYandexMetrika } from '../utils/yandexMetrika';
+import { getApiBase } from '../utils/api';
 import './Profile.css';
 
 interface UserProfile {
@@ -32,9 +34,15 @@ interface SubscriptionPlan {
   };
 }
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API_BASE = getApiBase();
 
 const Profile: React.FC = () => {
+  // Добавляем Yandex.Metrika счетчик
+  useEffect(() => {
+    addYandexMetrika('104758735');
+  }, []);
+
+
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
   const [profile, setProfile] = useState<UserProfile | null>(null);

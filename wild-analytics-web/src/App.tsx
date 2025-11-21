@@ -15,6 +15,7 @@ import AdMonitoring from './pages/AdMonitoring';
 import AIHelper from './pages/AIHelper';
 import OracleQueries from './pages/OracleQueries';
 import SupplyPlanningEnhanced from './pages/SupplyPlanningEnhanced';
+import SupplyPlanning from './pages/SupplyPlanning';
 import GlobalSearch from './pages/GlobalSearch';
 import ExternalAnalysis from './pages/ExternalAnalysis';
 import { AuthProvider } from './contexts/AuthContext';
@@ -43,7 +44,8 @@ function App() {
             <Route path="/ad-monitoring" element={<AdMonitoring />} />
             <Route path="/ai-helper" element={<AIHelper />} />
             <Route path="/oracle-queries" element={<OracleQueries />} />
-            <Route path="/supply-planning" element={<SupplyPlanningEnhanced />} />
+            <Route path="/supply-planning" element={<SupplyPlanning />} />
+            <Route path="/supply-planning-enhanced" element={<SupplyPlanningEnhanced />} />
             <Route path="/global-search" element={<GlobalSearch />} />
             <Route path="/external-analysis" element={<ExternalAnalysis />} />
           </Route>

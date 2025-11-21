@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { addYandexMetrika } from '../utils/yandexMetrika';
+import { getApiBase } from '../utils/api';
 import axios from 'axios';
 import './Dashboard.css';
 
@@ -23,16 +25,22 @@ interface DashboardData {
   }>;
 }
 
+const API_BASE = getApiBase();
+
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Добавляем Yandex.Metrika счетчик для главной страницы
+  useEffect(() => {
+    addYandexMetrika('104757369');
+  }, []);
+
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         console.log('🔍 Fetching dashboard data...');
-        const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8000';
         console.log('📡 API Base:', API_BASE);
         
         const token = localStorage.getItem('token');

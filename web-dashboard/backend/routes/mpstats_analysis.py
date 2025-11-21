@@ -19,7 +19,7 @@ router = APIRouter()
 try:
     from config import MPSTATS_API_KEY
 except ImportError:
-    MPSTATS_API_KEY = "68431d2ac72ea4.96910328a56006b24a55daf65db03835d5fe5b4d"
+    MPSTATS_API_KEY = "691224ca5c1122.7009638641fe116d63a053fa882deefbd618dcb3"
 
 MPSTATS_BASE_URL = "https://mpstats.io/api/wb"
 

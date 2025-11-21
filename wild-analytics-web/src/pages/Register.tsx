@@ -1,9 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { addYandexMetrika } from '../utils/yandexMetrika';
 import './Auth.css';
 
 const Register: React.FC = () => {
+  // Добавляем Yandex.Metrika счетчик
+  useEffect(() => {
+    addYandexMetrika('104757313');
+  }, []);
+
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -45,7 +52,7 @@ const Register: React.FC = () => {
     <div className="auth-container">
       <div className="auth-card">
         <div className="auth-header">
-          <h1>🐺 Wild Analytics</h1>
+          <h1>🐺 SAMP Analytics</h1>
           <p>Создать аккаунт</p>
         </div>
         

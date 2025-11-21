@@ -1,5 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Bar } from 'react-chartjs-2';
+import { addYandexMetrika } from '../utils/yandexMetrika';
+import { buildApiUrl } from '../utils/api';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -14,6 +16,12 @@ import './Analysis.css';
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 export default function ExternalAnalysis() {
+  // Добавляем Yandex.Metrika счетчик
+  useEffect(() => {
+    addYandexMetrika('104757308');
+  }, []);
+
+
   const [query, setQuery] = useState('');
   const [result, setResult] = useState<{ summary: string; results?: any } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -30,7 +38,7 @@ export default function ExternalAnalysis() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/analysis/external', {
+      const response = await fetch(buildApiUrl('analysis/external'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -102,7 +110,7 @@ export default function ExternalAnalysis() {
       maxWidth: '1400px',
       margin: '0 auto',
       padding: '20px',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: 'linear-gradient(135deg,rgb(157, 157, 157) 0%,rgb(229, 229, 229) 100%)',
       minHeight: '100vh'
     }}>
       {/* Header */}

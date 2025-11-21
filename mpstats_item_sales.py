@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 # Константы - используем тот же ключ API, что и в product_mpstat.py
-MPSTAT_API_KEY = "68431d2ac72ea4.96910328a56006b24a55daf65db03835d5fe5b4d"
+MPSTAT_API_KEY = "691224ca5c1122.7009638641fe116d63a053fa882deefbd618dcb3"
 
 async def get_item_sales(sku, publish_date, days=3):
     """

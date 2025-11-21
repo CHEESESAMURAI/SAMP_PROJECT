@@ -12,7 +12,7 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 # MPStats API ключ (из WILD_BOT_11)
-MPSTATS_API_KEY = "68431d2ac72ea4.96910328a56006b24a55daf65db03835d5fe5b4d"
+MPSTATS_API_KEY = "691224ca5c1122.7009638641fe116d63a053fa882deefbd618dcb3"
 
 async def get_mpstats_product_data_fixed(article: str) -> Dict[str, Any]:
     """
@@ -28,7 +28,7 @@ async def get_mpstats_product_data_fixed(article: str) -> Dict[str, Any]:
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
     }
 
-    today = datetime.utcnow().date()
+    today = datetime.now().date()  # Используем локальное время для согласованности
     d2 = today.strftime("%Y-%m-%d")
     d1 = (today - timedelta(days=30)).strftime("%Y-%m-%d")
 
@@ -158,6 +158,44 @@ async def get_mpstats_product_data_fixed(article: str) -> Dict[str, Any]:
         purchase_rate = safe_float(card_data.get("purchaseRate", purchase_rate))
         conversion_rate = safe_float(card_data.get("conversionRate", conversion_rate))
 
+    # ✅ ГЕНЕРИРУЕМ CHART_DATA из реальных данных MPStats
+    chart_data = {
+        "dates": [],
+        "revenue": [],
+        "orders": [],
+        "search_frequency": [],
+        "ads_impressions": []
+    }
+    
+    if raw_sales:
+        # Сортируем данные по дате (от старых к новым)
+        sorted_sales = sorted(raw_sales, key=lambda x: x.get("date", ""))
+        
+        for day in sorted_sales:
+            date_str = day.get("date", "")
+            if date_str:
+                chart_data["dates"].append(date_str)
+                
+                # Продажи
+                day_sales = safe_int(day.get("sales", 0))
+                chart_data["orders"].append(day_sales)
+                
+                # Выручка
+                day_price = safe_float(day.get("final_price", 0))
+                if day_price == 0:
+                    day_price = safe_float(day.get("basic_price", 0))
+                if day_price == 0:
+                    day_price = safe_float(day.get("price", 0))
+                
+                day_revenue = day_sales * day_price
+                chart_data["revenue"].append(day_revenue)
+                
+                # Остальные метрики показываем как 0 (нет данных)
+                chart_data["search_frequency"].append(0)
+                chart_data["ads_impressions"].append(0)
+        
+        logger.info(f"📊 Generated chart_data: {len(chart_data['dates'])} days, {sum(chart_data['orders'])} total orders, {sum(chart_data['revenue']):.2f} total revenue")
+
     result = {
         "raw_data": raw_sales,
         "daily_sales": daily_sales,
@@ -170,6 +208,7 @@ async def get_mpstats_product_data_fixed(article: str) -> Dict[str, Any]:
         "market_share": market_share,
         "summary": summary,
         "card_data": card_data,
+        "chart_data": chart_data,  # ✅ Добавляем chart_data
         "debug_info": {
             "has_sales_data": bool(raw_sales),
             "has_summary": bool(summary),
@@ -509,14 +548,24 @@ async def get_wb_product_info_fixed(article: str) -> Dict[str, Any]:
                 "is_fbs": True
             }
         },
-        "chart_data": {
+        "chart_data": mpstats_data.get("chart_data", {
             "dates": [],
             "revenue": [],
             "orders": [],
-            "stock": [],
             "search_frequency": [],
+            "ads_impressions": [],
             "brand_competitors": [],
-            "brand_categories": []
+            "brand_categories": [],
+            "brand_top_items": []
+        }) if mpstats_data else {
+            "dates": [],
+            "revenue": [],
+            "orders": [],
+            "search_frequency": [],
+            "ads_impressions": [],
+            "brand_competitors": [],
+            "brand_categories": [],
+            "brand_top_items": []
         },
         "recommendations": []
     }

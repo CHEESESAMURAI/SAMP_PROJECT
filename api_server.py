@@ -84,7 +84,7 @@ async def fetch_mpstats_category_data(category_path: str, date_from: str, date_t
     }
     
     headers = {
-        "X-Mpstats-TOKEN": "68431d2ac72ea4.96910328a56006b24a55daf65db03835d5fe5b4d",
+        "X-Mpstats-TOKEN": "691224ca5c1122.7009638641fe116d63a053fa882deefbd618dcb3",
         "Content-Type": "application/json"
     }
     

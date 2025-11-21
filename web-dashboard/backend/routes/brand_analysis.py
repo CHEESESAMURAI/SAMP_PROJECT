@@ -39,7 +39,7 @@ async def fetch_mpstats_brand_data(brand_name: str, date_from: str, date_to: str
     try:
         url = "https://mpstats.io/api/wb/get/brand"
         headers = {
-            "X-Mpstats-TOKEN": "68431d2ac72ea4.96910328a56006b24a55daf65db03835d5fe5b4d",
+            "X-Mpstats-TOKEN": "691224ca5c1122.7009638641fe116d63a053fa882deefbd618dcb3",
             "Content-Type": "application/json"
         }
         
@@ -197,6 +197,15 @@ def prepare_products_table(products: List[Dict[str, Any]]) -> List[Dict[str, Any
             "turnover_days": product.get("turnover_days", 0),
             "comments": product.get("comments", 0),
             "sku_first_date": product.get("sku_first_date", ""),
+            
+            # Поля для расчета упущенной выручки и других метрик
+            "lost_profit": product.get("lost_profit", 0),
+            "lost_profit_percent": product.get("lost_profit_percent", 0),
+            "revenue_potential": product.get("revenue_potential", 0),
+            "revenue_average": product.get("revenue_average", 0),
+            "days_in_stock": product.get("days_in_stock", 0),
+            "days_with_sales": product.get("days_with_sales", 0) or product.get("days_with_sale", 0),
+            "average_if_in_stock": product.get("average_if_in_stock", 0),
             
             # Дополнительные поля
             "basic_sale": product.get("basic_sale", 0),

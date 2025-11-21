@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './GlobalSearch.css';
 import FormattedNumber from '../components/UI/FormattedNumber';
 
+import { addYandexMetrika } from '../utils/yandexMetrika';
+import { buildApiUrl } from '../utils/api';
 interface SalesImpact {
   frequency: number;
   revenue: number;
@@ -19,9 +21,13 @@ interface SearchResult {
   sales_impact: SalesImpact;
 }
 
-const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-
 const GlobalSearch: React.FC = () => {
+  // Добавляем Yandex.Metrika счетчик
+  useEffect(() => {
+    addYandexMetrika('104758714');
+  }, []);
+
+
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -35,7 +41,7 @@ const GlobalSearch: React.FC = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE}/analysis/global-search`, {
+      const response = await fetch(buildApiUrl('analysis/global-search'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

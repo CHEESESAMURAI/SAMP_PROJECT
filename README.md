@@ -47,22 +47,29 @@
 git clone https://github.com/YOUR_USERNAME/WILD-BOT-9.git
 cd WILD-BOT-9
 ```
+2. **Сконфигурируйте окружение:**
+```bash
+# 2.1 Настройки backend (по необходимости):
+cp config_example.py config.py  # заполните ключи при необходимости
 
-2. **Backend:**
+# 2.2 Настройки frontend:
+cp wild-analytics-web/env.local.example wild-analytics-web/.env.local
+```
+> Значение `REACT_APP_API_URL` в `.env.local` по умолчанию указывает на локальный backend `http://localhost:8000`. Измените его, если backend запускается на другом хосте/порту (например, `https://your-domain.com/api` в продакшене).
+
+3. **Backend:**
 ```bash
 cd web-dashboard/backend
 pip install -r requirements.txt
 python main.py
 ```
-
-3. **Frontend:**
+4. **Frontend:**
 ```bash
 cd wild-analytics-web
 npm install
 npm start
 ```
-
-4. Откройте [http://localhost:3000](http://localhost:3000)
+5. Откройте [http://localhost:3000](http://localhost:3000)
 
 ### Развертывание на VPS
 
@@ -85,12 +92,13 @@ OPENAI_API_KEY = "ваш_ключ"
 JWT_SECRET_KEY = "ваш_секрет"
 ```
 
-### Frontend (wild-analytics-web/src/contexts/AuthContext.tsx)
+### Frontend (wild-analytics-web/src/utils/api.ts)
 ```typescript
-const API_BASE = 'http://localhost:8000';
-// или для production:
-const API_BASE = 'https://your-domain.com/api';
+const DEFAULT_API_BASE = 'http://localhost:8000';
+const rawBase = process.env.REACT_APP_API_URL ?? DEFAULT_API_BASE;
+export const getApiBase = () => rawBase;
 ```
+> Создайте файл `wild-analytics-web/.env.local` (см. пример `env.local.example`), чтобы изменить `REACT_APP_API_URL` для локального запуска или staging.
 
 ## 📝 Структура проекта
 

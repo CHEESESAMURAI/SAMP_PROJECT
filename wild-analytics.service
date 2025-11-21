@@ -1,5 +1,5 @@
 [Unit]
-Description=Wild Analytics Dashboard
+Description=SAMP Analytics Dashboard
 After=network.target
 
 [Service]

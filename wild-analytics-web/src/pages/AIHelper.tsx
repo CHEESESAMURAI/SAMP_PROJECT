@@ -1,7 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { addYandexMetrika } from '../utils/yandexMetrika';
+import { buildApiUrl } from '../utils/api';
 import './Analysis.css';
 
 export default function AIHelper() {
+  // Добавляем Yandex.Metrika счетчик
+  useEffect(() => {
+    addYandexMetrika('104757957');
+  }, []);
+
+
   const [contentType, setContentType] = useState('product_description');
   const [prompt, setPrompt] = useState('');
   const [generated, setGenerated] = useState<string | null>(null);
@@ -30,7 +38,7 @@ export default function AIHelper() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/analysis/ai-helper', {
+      const response = await fetch(buildApiUrl('analysis/ai-helper'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -58,7 +66,7 @@ export default function AIHelper() {
       maxWidth: '1400px',
       margin: '0 auto',
       padding: '20px',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: 'linear-gradient(135deg,rgb(157, 157, 157) 0%,rgb(229, 229, 229) 100%)',
       minHeight: '100vh'
     }}>
       {/* Header */}

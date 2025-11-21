@@ -5,7 +5,7 @@ const MainLayout: React.FC = () => {
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       <div className="sidebar">
-        <h2>Wild Analytics</h2>
+        <h2>SAMP Analytics</h2>
         <nav>
           <a href="/dashboard" className="nav-item">Дашборд</a>
           <a href="/product-analysis" className="nav-item">Анализ товаров</a>

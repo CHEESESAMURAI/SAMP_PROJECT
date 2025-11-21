@@ -3,7 +3,7 @@ module.exports = {
     {
       name: 'wild-backend',
       script: 'python3',
-      args: 'main.py',
+      args: '-m uvicorn main:app --host 0.0.0.0 --port 8000',
       cwd: '/root/WILD_BOT_9/web-dashboard/backend',
       instances: 1,
       autorestart: true,

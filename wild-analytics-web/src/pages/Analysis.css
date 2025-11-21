@@ -153,11 +153,11 @@
 }
 
 @media (min-width: 768px) {
-  .md\\:grid-cols-2 {
+  .md\:grid-cols-2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   
-  .md\\:grid-cols-5 {
+  .md\:grid-cols-5 {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
@@ -226,7 +226,7 @@
   color: white;
 }
 
-.text-white\\/80 {
+.text-white\/80 {
   color: rgba(255, 255, 255, 0.8);
 }
 
@@ -329,7 +329,7 @@
   transition-duration: 150ms;
 }
 
-.hover\\:text-white\\/80:hover {
+.hover\:text-white\/80:hover {
   color: rgba(255, 255, 255, 0.8);
 }
 
@@ -337,7 +337,7 @@
   max-width: 1400px;
   margin: 0 auto;
   padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg,rgb(157, 157, 157) 0%,rgb(229, 229, 229) 100%);
   min-height: 100vh;
   box-sizing: border-box;
 }

@@ -1,4 +1,6 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import { addYandexMetrika } from '../utils/yandexMetrika';
+import { buildApiUrl } from '../utils/api';
 import {
   ResponsiveContainer,
   BarChart,
@@ -81,6 +83,12 @@ interface SupplySummaryAnalytics {
 }
 
 const SupplyPlanningEnhanced: React.FC = () => {
+  // Добавляем Yandex.Metrika счетчик
+  useEffect(() => {
+    addYandexMetrika('104757317');
+  }, []);
+
+
   // State
   const [skus, setSKUs] = useState<EnhancedSKU[]>([]);
   const [summary, setSummary] = useState<SupplySummaryAnalytics | null>(null);
@@ -121,7 +129,7 @@ const SupplyPlanningEnhanced: React.FC = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/planning/supply-planning-enhanced', {
+      const response = await fetch(buildApiUrl('planning/supply-planning-enhanced'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -163,7 +171,7 @@ const SupplyPlanningEnhanced: React.FC = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/planning/supply-planning-export', {
+      const response = await fetch(buildApiUrl('planning/supply-planning-export'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -403,7 +411,7 @@ const SupplyPlanningEnhanced: React.FC = () => {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: 'linear-gradient(135deg,rgb(157, 157, 157) 0%,rgb(229, 229, 229) 100%)',
       padding: '20px'
     }}>
       <div style={{ maxWidth: '1400px', margin: '0 auto' }}>

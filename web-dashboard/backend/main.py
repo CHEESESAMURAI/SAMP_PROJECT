@@ -93,10 +93,18 @@ def format_external_analysis(data):
 # Import the new MPStats analysis routes
 from routes.mpstats_analysis import router as mpstats_router
 from routes.mpstats_item import router as mpstats_item_router
+from routes.mpstats_product_detail import router as mpstats_product_detail_router
+from routes.mpstats_competitors import router as mpstats_competitors_router
+from routes.mpstats_balance import router as mpstats_balance_router
+from routes.mpstats_brand import router as mpstats_brand_router
 from routes.brand_analysis import router as brand_router
 from routes.category_analysis import router as category_router
+from routes.mpstats_category_extended import router as mpstats_category_extended_router
+from routes.supply_planning_monthly import router as supply_planning_monthly_router
 from routes.blogger_search import router as blogger_router
 from routes.supplier_analysis import router as seller_router
+from routes.mpstats_seller import router as mpstats_seller_router
+from routes.mpstats_seller_extended import router as mpstats_seller_extended_router
 from routes.oracle_analysis import router as oracle_router
 from routes.seasonality_analysis import router as seasonality_router
 
@@ -113,14 +121,15 @@ app = FastAPI(
 sys.modules['main'].app = app
 
 # CORS настройки
+# Получаем разрешенные origins из переменной окружения или используем дефолтные
+ALLOWED_ORIGINS = os.getenv(
+    "ALLOWED_ORIGINS", 
+    "http://localhost:3000,http://127.0.0.1:3000,https://crm.samp.business"
+).split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000", 
-        "http://127.0.0.1:3000",
-        "http://93.127.214.183:3000",
-        "https://93.127.214.183:3000"
-    ],
+    allow_origins=[origin.strip() for origin in ALLOWED_ORIGINS],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -1890,8 +1899,16 @@ async def oracle_export(
 # Add the MPStats analysis routes
 app.include_router(mpstats_router, prefix="/mpstats", tags=["MPStats Analysis"])
 app.include_router(mpstats_item_router, prefix="/mpstats-item", tags=["MPStats Item Analysis"])
+app.include_router(mpstats_product_detail_router, tags=["MPStats Product Detail"])
+app.include_router(mpstats_competitors_router, prefix="", tags=["MPStats Competitors"])
+app.include_router(mpstats_balance_router, prefix="", tags=["MPStats Balance"])
+app.include_router(mpstats_seller_router, prefix="", tags=["MPStats Seller Analysis"])
+app.include_router(mpstats_seller_extended_router, tags=["MPStats Seller Extended"])
+app.include_router(mpstats_brand_router, tags=["MPStats Brand"])
+app.include_router(mpstats_category_extended_router, tags=["MPStats Category Extended"])
 app.include_router(brand_router, prefix="/brand", tags=["Brand Analysis"])
 app.include_router(category_router, prefix="/category", tags=["Category Analysis"])
+app.include_router(supply_planning_monthly_router, prefix="/planning", tags=["Supply Planning Monthly"])
 app.include_router(blogger_router, prefix="/bloggers", tags=["Blogger Search"])
 app.include_router(seller_router, prefix="/seller", tags=["Seller Analysis"])
 app.include_router(oracle_router, prefix="/oracle", tags=["Oracle Analysis"])

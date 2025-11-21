@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import { Line, Bar } from 'react-chartjs-2';
 
+import { addYandexMetrika } from '../utils/yandexMetrika';
+import { getApiBase } from '../utils/api';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend);
 
 interface AnnualSeasonalityData {
@@ -32,6 +34,12 @@ interface SeasonalityData {
 }
 
 const SeasonalityAnalysis: React.FC = () => {
+  // Добавляем Yandex.Metrika счетчик
+  useEffect(() => {
+    addYandexMetrika('104757938');
+  }, []);
+
+
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<SeasonalityData | null>(null);
   const [categoryPath, setCategoryPath] = useState('Для женщин/Одежда/Платья');
@@ -40,7 +48,7 @@ const SeasonalityAnalysis: React.FC = () => {
   const [showHolidays, setShowHolidays] = useState(true);
   const [error, setError] = useState('');
 
-  const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+  const API_BASE = getApiBase();
 
   const analyzeSeasonality = async () => {
     if (!categoryPath.trim()) {
@@ -313,7 +321,7 @@ const SeasonalityAnalysis: React.FC = () => {
       maxWidth: '1400px',
       margin: '0 auto',
       padding: '20px',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: 'linear-gradient(135deg,rgb(157, 157, 157) 0%,rgb(229, 229, 229) 100%)',
       minHeight: '100vh'
     }}>
       {/* Заголовок */}

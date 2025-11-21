@@ -228,7 +228,7 @@ logger.warning(f"❌ MPStats sales {resp.status}: {error_text}")
 
 **Пример реального запроса из curl (работает):**
 ```bash
-curl -H "X-Mpstats-TOKEN: 68431d2ac72ea4.96910328a56006b24a55daf65db03835d5fe5b4d" \
+curl -H "X-Mpstats-TOKEN: 691224ca5c1122.7009638641fe116d63a053fa882deefbd618dcb3" \
      "https://mpstats.io/api/wb/get/in_similar?path=/Для женщин/Одежда/Платья&d1=2025-06-19&d2=2025-07-19&fbs=0"
 
 # Ответ: {"data": [], "total": 0, "error": false, "sortModel": [...]}

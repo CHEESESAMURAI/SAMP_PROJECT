@@ -31,7 +31,7 @@ const Layout: React.FC = () => {
       {/* Sidebar */}
       <div className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
         <div className="sidebar-header">
-          <h2>🐺 Wild Analytics</h2>
+          <h2>SAMP ANALYTICS</h2>
           <button 
             className="sidebar-toggle"
             onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -78,7 +78,7 @@ const Layout: React.FC = () => {
             ☰
           </button>
           <div className="header-title">
-            <h1>Wild Analytics Dashboard</h1>
+            <h1>SAMP Analytics Dashboard</h1>
             <p>Профессиональная аналитика для Wildberries</p>
           </div>
           <div className="header-user">

@@ -1,5 +1,7 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Line, Bar, Doughnut, Radar } from 'react-chartjs-2';
+import { addYandexMetrika } from '../utils/yandexMetrika';
+import { buildApiUrl } from '../utils/api';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -100,8 +102,14 @@ interface OracleAnalysisData {
 }
 
 const OracleQueries: React.FC = () => {
+  // Добавляем Yandex.Metrika счетчик
+  useEffect(() => {
+    addYandexMetrika('104758421');
+  }, []);
+
+
   const [categoriesCount, setCategoriesCount] = useState(10);
-  const [analysisMonth, setAnalysisMonth] = useState('2024-07');
+  const [analysisMonth, setAnalysisMonth] = useState('2025-07');
   const [minRevenue, setMinRevenue] = useState(10000);
   const [minFrequency, setMinFrequency] = useState(100);
   const [analysisType, setAnalysisType] = useState('queries');
@@ -136,7 +144,7 @@ const OracleQueries: React.FC = () => {
     setData(null);
 
     try {
-      const response = await fetch('http://localhost:8000/oracle/analyze', {
+      const response = await fetch(buildApiUrl('oracle/analyze'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -169,7 +177,7 @@ const OracleQueries: React.FC = () => {
     if (!data) return;
     
     try {
-      const response = await fetch('http://localhost:8000/oracle/export', {
+      const response = await fetch(buildApiUrl('oracle/export'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -664,18 +672,29 @@ const OracleQueries: React.FC = () => {
               
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
                 gap: '20px',
                 marginBottom: '30px'
               }}>
                 <div style={{
                   background: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)',
                   borderRadius: '15px',
-                  padding: '20px',
+                  padding: '25px',
                   textAlign: 'center',
-                  border: '1px solid #e5e7eb'
+                  border: '1px solid #e5e7eb',
+                  minHeight: '120px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center'
                 }}>
-                  <div style={{ fontSize: '2rem', fontWeight: '700', color: '#667eea', marginBottom: '5px' }}>
+                  <div style={{ 
+                    fontSize: 'clamp(1.2rem, 4vw, 2.2rem)', 
+                    fontWeight: '700', 
+                    color: '#667eea', 
+                    marginBottom: '8px',
+                    wordBreak: 'break-word',
+                    lineHeight: '1.2'
+                  }}>
                     {data.analytics.total_queries}
                   </div>
                   <div style={{ color: '#6b7280', fontSize: '0.9rem', fontWeight: '500' }}>
@@ -686,11 +705,22 @@ const OracleQueries: React.FC = () => {
                 <div style={{
                   background: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)',
                   borderRadius: '15px',
-                  padding: '20px',
+                  padding: '25px',
                   textAlign: 'center',
-                  border: '1px solid #e5e7eb'
+                  border: '1px solid #e5e7eb',
+                  minHeight: '120px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center'
                 }}>
-                  <div style={{ fontSize: '2rem', fontWeight: '700', color: '#10b981', marginBottom: '5px' }}>
+                  <div style={{ 
+                    fontSize: 'clamp(1rem, 3.5vw, 1.8rem)', 
+                    fontWeight: '700', 
+                    color: '#10b981', 
+                    marginBottom: '8px',
+                    wordBreak: 'break-word',
+                    lineHeight: '1.2'
+                  }}>
                     {formatPrice(data.analytics.total_revenue)}
                   </div>
                   <div style={{ color: '#6b7280', fontSize: '0.9rem', fontWeight: '500' }}>
@@ -701,11 +731,22 @@ const OracleQueries: React.FC = () => {
                 <div style={{
                   background: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)',
                   borderRadius: '15px',
-                  padding: '20px',
+                  padding: '25px',
                   textAlign: 'center',
-                  border: '1px solid #e5e7eb'
+                  border: '1px solid #e5e7eb',
+                  minHeight: '120px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center'
                 }}>
-                  <div style={{ fontSize: '2rem', fontWeight: '700', color: '#ef4444', marginBottom: '5px' }}>
+                  <div style={{ 
+                    fontSize: 'clamp(1rem, 3.5vw, 1.8rem)', 
+                    fontWeight: '700', 
+                    color: '#ef4444', 
+                    marginBottom: '8px',
+                    wordBreak: 'break-word',
+                    lineHeight: '1.2'
+                  }}>
                     {formatPrice(data.analytics.total_missed_revenue)}
                   </div>
                   <div style={{ color: '#6b7280', fontSize: '0.9rem', fontWeight: '500' }}>
@@ -716,11 +757,22 @@ const OracleQueries: React.FC = () => {
                 <div style={{
                   background: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)',
                   borderRadius: '15px',
-                  padding: '20px',
+                  padding: '25px',
                   textAlign: 'center',
-                  border: '1px solid #e5e7eb'
+                  border: '1px solid #e5e7eb',
+                  minHeight: '120px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center'
                 }}>
-                  <div style={{ fontSize: '2rem', fontWeight: '700', color: '#8b5cf6', marginBottom: '5px' }}>
+                  <div style={{ 
+                    fontSize: 'clamp(1.2rem, 4vw, 2.2rem)', 
+                    fontWeight: '700', 
+                    color: '#8b5cf6', 
+                    marginBottom: '8px',
+                    wordBreak: 'break-word',
+                    lineHeight: '1.2'
+                  }}>
                     {formatPercent(data.analytics.avg_monopoly)}
                   </div>
                   <div style={{ color: '#6b7280', fontSize: '0.9rem', fontWeight: '500' }}>
@@ -731,11 +783,22 @@ const OracleQueries: React.FC = () => {
                 <div style={{
                   background: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)',
                   borderRadius: '15px',
-                  padding: '20px',
+                  padding: '25px',
                   textAlign: 'center',
-                  border: '2px solid #e5e7eb'
+                  border: '2px solid #e5e7eb',
+                  minHeight: '120px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center'
                 }}>
-                  <div style={{ fontSize: '2rem', fontWeight: '700', color: '#f59e0b', marginBottom: '5px' }}>
+                  <div style={{ 
+                    fontSize: 'clamp(1.2rem, 4vw, 2.2rem)', 
+                    fontWeight: '700', 
+                    color: '#f59e0b', 
+                    marginBottom: '8px',
+                    wordBreak: 'break-word',
+                    lineHeight: '1.2'
+                  }}>
                     {data.category_summaries.length}
                   </div>
                   <div style={{ color: '#6b7280', fontSize: '0.9rem', fontWeight: '500' }}>

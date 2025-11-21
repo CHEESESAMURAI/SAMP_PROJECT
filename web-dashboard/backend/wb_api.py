@@ -30,7 +30,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 # MPSTATS API ключ
-MPSTATS_API_KEY = "68431d2ac72ea4.96910328a56006b24a55daf65db03835d5fe5b4d"
+MPSTATS_API_KEY = "691224ca5c1122.7009638641fe116d63a053fa882deefbd618dcb3"
 
 async def get_wb_product_info(article):
     """Получает информацию о товаре с Wildberries + MPStats с улучшенной обработкой цен."""
@@ -314,21 +314,29 @@ async def format_product_analysis(product_data: Dict[str, Any], article: str) ->
             # Частотность артикула (берём words_count либо visibility)
             freq_val = day.get("search_words_count") or day.get("search_visibility") or 0
             search_freq_series.append(freq_val)
+        
+        # Убеждаемся, что данные идут в правильном порядке (от старых к новым)
+        # MPStats данные обычно приходят в правильном порядке, но проверим
+        if len(dates) > 1 and dates[0] > dates[-1]:
+            # Если даты идут от новых к старым, разворачиваем все массивы
+            dates.reverse()
+            orders_series.reverse()
+            revenue_series.reverse()
+            stock_series.reverse()
+            search_freq_series.reverse()
     else:
-        # MPSTATS не отдал продаж – показываем пустой ряд, чтобы фронт отобразил нули,
-        # но не берём данные из Wildberries, т.к. они неточны.
-        from datetime import datetime, timedelta
-        today = datetime.utcnow().date()
-        dates = [(today - timedelta(days=i)).strftime("%Y-%m-%d") for i in range(29, -1, -1)]
-        orders_series = [0] * 30
-        revenue_series = [0] * 30
-        stock_series = [product_data.get("stocks", {}).get("total", 0)] * 30
-        search_freq_series = [0] * 30
+        # MPSTATS не отдал продаж – возвращаем пустые данные
+        # НЕ показываем заглушки, только реальные данные
+        dates = []
+        orders_series = []
+        revenue_series = []
+        stock_series = []
+        search_freq_series = []
 
     # 3. Актуальные суточные показатели
-    daily_sales = mpstats.get("daily_sales") or orders_series[-1]
+    daily_sales = mpstats.get("daily_sales") or (orders_series[-1] if orders_series else 0)
     daily_revenue_mp = mpstats.get("daily_revenue")
-    daily_revenue = daily_revenue_mp if daily_revenue_mp not in (None, 0) else revenue_series[-1] or daily_sales * price_current
+    daily_revenue = daily_revenue_mp if daily_revenue_mp not in (None, 0) else (revenue_series[-1] if revenue_series else daily_sales * price_current)
     # Если MPSTATS не дал прибыли / выручки, пересчитываем вручную
     if (daily_revenue in (None, 0)) and daily_sales and price_current:
         daily_revenue = daily_sales * price_current
@@ -364,15 +372,13 @@ async def format_product_analysis(product_data: Dict[str, Any], article: str) ->
         }
     }
 
-    # 5. Формируем chart_data (без случайных чисел)
-    stock_const = product_data.get("stocks", {}).get("total", 0)
+    # 5. Формируем chart_data (только реальные данные, без графика остатков)
     chart_data = {
         "dates": dates,
         "revenue": revenue_series,
         "orders": orders_series,
-        "stock": stock_series,
         "search_frequency": search_freq_series,
-        "ads_impressions": [0] * len(dates),
+        "ads_impressions": [0] * len(dates) if dates else [],
     }
 
     # 6. Данные бренда
@@ -383,15 +389,16 @@ async def format_product_analysis(product_data: Dict[str, Any], article: str) ->
     brand_top_items = await get_brand_top_items(brand) or []
 
     # 7. Простейшая аналитика (только turnover_days)
+    stock_total = product_data.get("stocks", {}).get("total", 0)
     analytics = {
-        "turnover_days": round(stock_const / daily_sales, 1) if daily_sales else None
+        "turnover_days": round(stock_total / daily_sales, 1) if daily_sales else None
     }
 
     # Дополнительные показатели эффективности, если они пришли из MPSTATS
     if mpstats.get("purchase_rate") not in (None, 0):
         analytics["purchase_rate"] = mpstats["purchase_rate"]
     if mpstats.get("conversion_rate") not in (None, 0):
-        analytics["conversion_rate"] = mpstats["conversion_rate"]
+        analytics["conversion"] = mpstats["conversion_rate"]  # Маппинг на поле conversion в интерфейсе
     if mpstats.get("market_share") not in (None, 0):
         analytics["market_share"] = mpstats["market_share"]
 

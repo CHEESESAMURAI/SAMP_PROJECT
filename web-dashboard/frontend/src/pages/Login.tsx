@@ -26,7 +26,7 @@ const Login: React.FC = () => {
   return (
     <div className="container" style={{ maxWidth: '400px', margin: '50px auto' }}>
       <div className="card">
-        <h2 className="text-center">Вход в Wild Analytics</h2>
+        <h2 className="text-center">Вход в SAMP Analytics</h2>
         
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (

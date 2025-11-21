@@ -5,7 +5,7 @@
 
 .sidebar {
   width: 280px;
-  background: #1f2937;
+  background: #1a1a1a;
   color: white;
   transition: all 0.3s;
   display: flex;
@@ -63,7 +63,7 @@
 }
 
 .nav-item.active {
-  background: #3b82f6;
+  background: #a3a3a3;
   color: white;
 }
 

@@ -26,16 +26,43 @@ async def format_product_analysis(product_data: Dict[str, Any], article: str) ->
         dates = [d.get('date') for d in data]
         orders = [d.get('sales', 0) for d in data]
         revenue = [d.get('revenue', d.get('sales', 0)*price) for d in data]
+        
+        # Убеждаемся, что данные идут в правильном порядке (от старых к новым)
+        if len(dates) > 1 and dates[0] > dates[-1]:
+            # Если даты идут от новых к старым, разворачиваем все массивы
+            dates.reverse()
+            orders.reverse()
+            revenue.reverse()
     else:
-        today = datetime.utcnow().date()
-        dates = [(today - timedelta(days=i)).isoformat() for i in range(29,-1,-1)]
-        orders = revenue = [0]*30
+        # Нет реальных данных - возвращаем пустые массивы
+        # НЕ показываем заглушки, только реальные данные
+        dates = []
+        orders = []
+        revenue = []
     ds = mp.get('daily_sales') or (orders[-1] if orders else 0)
     dr = mp.get('daily_revenue') or (revenue[-1] if revenue else 0)
     dp = mp.get('daily_profit') or int(dr*0.25)
     product_data['sales'] = {'today': ds,'total': mp.get('total_sales', ds*30),'revenue':{'daily':dr,'weekly':dr*7,'monthly':dr*30,'total':mp.get('total_revenue', dr*365)},'profit':{'daily':dp,'weekly':dp*7,'monthly':dp*30}}
     stock = product_data.get('stocks', {}).get('total', 0)
-    chart = {'dates':dates,'revenue':revenue,'orders':orders,'stock':[stock]*30,'search_frequency':[0]*30,'ads_impressions':[0]*30}
+    
+    # Формируем данные для графиков только если есть реальные данные (без графика остатков)
+    if dates and orders and revenue:
+        chart = {
+            'dates': dates,
+            'revenue': revenue,
+            'orders': orders,
+            'search_frequency': [0]*len(dates),
+            'ads_impressions': [0]*len(dates)
+        }
+    else:
+        # Нет реальных данных - не показываем графики
+        chart = {
+            'dates': [],
+            'revenue': [],
+            'orders': [],
+            'search_frequency': [],
+            'ads_impressions': []
+        }
     brand = product_data.get('brand',''); subject = product_data.get('subject_name','')
     comp = await wb_api.generate_real_competitor_data(brand, subject) or []
     cat = await wb_api.get_brand_categories(brand) or []

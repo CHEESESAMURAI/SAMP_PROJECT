@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import axios from 'axios';
+import { getApiBase } from '../utils/api';
 import './Analysis.css';
 
 interface AdResult {
@@ -29,11 +31,64 @@ interface AdMonitoringResult {
   recommendations: string[];
 }
 
+const API_BASE = getApiBase();
+
 const AdMonitoring: React.FC = () => {
   const [articles, setArticles] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AdMonitoringResult | null>(null);
   const [error, setError] = useState('');
+
+  // Получаем location из React Router
+  const location = useLocation();
+
+  // Обработка предзаполненных данных при переходе с других страниц
+  useEffect(() => {
+    if ((location as any).state) {
+      const { prefilledArticle, autoAnalyze } = (location as any).state as { 
+        prefilledArticle?: string; 
+        autoAnalyze?: boolean; 
+      };
+      
+      if (prefilledArticle) {
+        console.log('📊 Получен предзаполненный артикул:', prefilledArticle);
+        setArticles(prefilledArticle);
+        
+        // Автоматически запускаем анализ, если указано
+        if (autoAnalyze) {
+          console.log('🚀 Автоматически запускаем мониторинг рекламы для артикула:', prefilledArticle);
+          setTimeout(() => {
+            handleAutoAnalyze(prefilledArticle);
+          }, 500); // Небольшая задержка для корректной установки состояния
+        }
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [(location as any).state]);
+
+  // Функция для автоматического анализа
+  const handleAutoAnalyze = async (articleValue: string) => {
+    if (!articleValue.trim()) {
+      setError('Введите артикул товара');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    setResult(null);
+
+    try {
+      const articlesList = [articleValue.trim()];
+      const response = await axios.post(`${API_BASE}/planning/ad-monitoring`, {
+        articles: articlesList
+      });
+      setResult(response.data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Произошла ошибка при анализе');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,7 +100,6 @@ const AdMonitoring: React.FC = () => {
 
     try {
       const articlesList = articles.split(',').map(a => a.trim()).filter(a => a);
-      const API_BASE = process.env.REACT_APP_API_URL || 'http://localhost:8000';
       const response = await axios.post(`${API_BASE}/planning/ad-monitoring`, {
         articles: articlesList
       });
